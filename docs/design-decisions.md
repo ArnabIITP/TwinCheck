@@ -55,3 +55,17 @@ This document records the current decisions that shape TwinCheck. They can be re
 **Decision:** The repository includes a reproducible smoke benchmark format, but README badges do not claim speedups or universal rankings.
 
 **Why:** Throughput depends on target startup cost, operating system, command behavior and workload. Any future benchmark claim needs exact inputs, commands, runtime versions, rounds and hardware.
+
+
+## DD-010: Compatibility rules are explicit and fingerprinted
+
+**Decision:** A versioned JSON contract declares exact or JSON-semantic comparison per output stream, JSON Pointer paths to ignore, and whether exit codes/timeouts are part of the compatibility promise. Each report stores the normalized contract and a SHA-256 fingerprint.
+
+**Why:** Byte-for-byte comparison is often too strict for structured response bodies, but implicit normalization can hide real regressions. Teams must review which fields they are choosing to ignore. Fingerprinting the policy makes results auditable and lets future regression tooling bind a fixture to the contract that found it.
+
+
+## DD-011: Findings should become portable regression inputs
+
+**Decision:** `export-pack` creates a new directory containing deduplicated exact UTF-8 counterexamples, a versioned manifest and the compatibility contract. `replay-pack` verifies the manifest, all input hashes and the contract fingerprint before executing explicitly supplied commands.
+
+**Why:** Discovery is only one part of compatibility work. Teams need a durable path from a mismatch to a regression check that can live in a repository and run after refactors. The contract hash ensures the case isn't quietly replayed under different semantics. Pack inputs are data and are never interpreted as commands.

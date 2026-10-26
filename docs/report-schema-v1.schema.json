@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/ArnabIITP/TwinCheck/blob/main/docs/report-schema-v1.schema.json",
-  "title": "TwinCheck JSON report schema v1",
-  "description": "Evidence report produced by TwinCheck's CLI. Findings include exact input text and observations; reports should be handled as potentially sensitive artifacts.",
+  "title": "TwinCheck JSON report schema v1.2",
+  "description": "Evidence report produced by TwinCheck's CLI. Includes the exact compatibility contract and its SHA-256 fingerprint used for the run. Findings include exact input text and observations; reports should be handled as potentially sensitive artifacts.",
   "type": "object",
   "required": [
     "schema_version",
@@ -17,44 +17,110 @@
     "cases_executed",
     "findings",
     "executions",
-    "summary"
+    "summary",
+    "compatibility_contract",
+    "compatibility_contract_sha256"
   ],
   "properties": {
-    "schema_version": { "type": "string" },
-    "tool": { "const": "TwinCheck" },
-    "tool_version": { "type": "string" },
-    "reference_command": { "type": "string" },
-    "candidate_command": { "type": "string" },
-    "strategy": { "type": "string" },
-    "seed": { "type": "integer" },
-    "repeat": { "type": "integer", "minimum": 1 },
-    "max_output_bytes": { "type": "integer", "minimum": 1 },
-    "working_directory": { "type": ["string", "null"] },
+    "schema_version": {
+      "type": "string"
+    },
+    "tool": {
+      "const": "TwinCheck"
+    },
+    "tool_version": {
+      "type": "string"
+    },
+    "reference_command": {
+      "type": "string"
+    },
+    "candidate_command": {
+      "type": "string"
+    },
+    "strategy": {
+      "type": "string"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "repeat": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "max_output_bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "working_directory": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "comparison_policy": {
       "type": "object",
       "properties": {
-        "normalize_eol": { "type": "boolean" },
-        "ignore_trailing_whitespace": { "type": "boolean" },
-        "ignore_stderr": { "type": "boolean" },
-        "ignore_exit_code": { "type": "boolean" }
+        "normalize_eol": {
+          "type": "boolean"
+        },
+        "ignore_trailing_whitespace": {
+          "type": "boolean"
+        },
+        "ignore_stderr": {
+          "type": "boolean"
+        },
+        "ignore_exit_code": {
+          "type": "boolean"
+        }
       },
       "additionalProperties": true
     },
-    "input_source": { "type": "string" },
-    "cases_requested": { "type": "integer", "minimum": 1 },
-    "cases_executed": { "type": "integer", "minimum": 0 },
-    "timeout_seconds": { "type": "number", "exclusiveMinimum": 0 },
-    "minimization_enabled": { "type": "boolean" },
-    "elapsed_seconds": { "type": "number", "minimum": 0 },
+    "input_source": {
+      "type": "string"
+    },
+    "cases_requested": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cases_executed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "timeout_seconds": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "minimization_enabled": {
+      "type": "boolean"
+    },
+    "elapsed_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
     "executions": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["case_index", "input_sha256", "differences"],
+        "required": [
+          "case_index",
+          "input_sha256",
+          "differences"
+        ],
         "properties": {
-          "case_index": { "type": "integer", "minimum": 1 },
-          "input_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-          "differences": { "type": "array", "items": { "type": "string" } }
+          "case_index": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "input_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "differences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         },
         "additionalProperties": true
       }
@@ -63,42 +129,162 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["case_index", "input", "input_sha256", "differences", "reference", "candidate"],
+        "required": [
+          "case_index",
+          "input",
+          "input_sha256",
+          "differences",
+          "reference",
+          "candidate"
+        ],
         "properties": {
-          "case_index": { "type": "integer", "minimum": 1 },
-          "input": { "type": "string" },
-          "input_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-          "differences": { "type": "array", "minItems": 1, "items": { "type": "string" } },
-          "minimized": { "type": "boolean" },
-          "minimization_trials": { "type": "integer", "minimum": 0 },
-          "minimization_limit_reached": { "type": "boolean" },
-          "reference": { "$ref": "#/$defs/observation" },
-          "candidate": { "$ref": "#/$defs/observation" },
-          "reference_runs": { "type": "array", "items": { "$ref": "#/$defs/observation" } },
-          "candidate_runs": { "type": "array", "items": { "$ref": "#/$defs/observation" } }
+          "case_index": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "input": {
+            "type": "string"
+          },
+          "input_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "differences": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "minimized": {
+            "type": "boolean"
+          },
+          "minimization_trials": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minimization_limit_reached": {
+            "type": "boolean"
+          },
+          "reference": {
+            "$ref": "#/$defs/observation"
+          },
+          "candidate": {
+            "$ref": "#/$defs/observation"
+          },
+          "reference_runs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/observation"
+            }
+          },
+          "candidate_runs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/observation"
+            }
+          }
         },
         "additionalProperties": true
       }
     },
-    "summary": { "type": "object" },
-    "limitations": { "type": "array", "items": { "type": "string" } },
-    "replay": { "type": "object" }
+    "summary": {
+      "type": "object"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "replay": {
+      "type": "object"
+    },
+    "compatibility_contract": {
+      "$ref": "compatibility-contract-v1.schema.json"
+    },
+    "compatibility_contract_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "compatibility_pack": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "integer"
+        },
+        "source_report_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "contract_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "case_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    }
   },
   "$defs": {
     "observation": {
       "type": "object",
-      "required": ["returncode", "stdout", "stderr", "timed_out", "duration_seconds"],
+      "required": [
+        "returncode",
+        "stdout",
+        "stderr",
+        "timed_out",
+        "duration_seconds"
+      ],
       "properties": {
-        "returncode": { "type": ["integer", "null"] },
-        "stdout": { "type": "string" },
-        "stderr": { "type": "string" },
-        "timed_out": { "type": "boolean" },
-        "duration_seconds": { "type": "number", "minimum": 0 },
-        "stdout_truncated": { "type": "boolean" },
-        "stderr_truncated": { "type": "boolean" },
-        "stdout_bytes_seen": { "type": "integer", "minimum": 0 },
-        "stderr_bytes_seen": { "type": "integer", "minimum": 0 },
-        "output_limit_exceeded": { "type": "boolean" }
+        "returncode": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "timed_out": {
+          "type": "boolean"
+        },
+        "duration_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stdout_truncated": {
+          "type": "boolean"
+        },
+        "stderr_truncated": {
+          "type": "boolean"
+        },
+        "stdout_bytes_seen": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stderr_bytes_seen": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_limit_exceeded": {
+          "type": "boolean"
+        }
       },
       "additionalProperties": true
     }

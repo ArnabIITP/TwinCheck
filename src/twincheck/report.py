@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, TextIO
 
-REPORT_SCHEMA_VERSION = "1.1"
+REPORT_SCHEMA_VERSION = "1.2"
 
 
 def write_json_report(path: str | Path, report: dict[str, Any]) -> None:
@@ -28,6 +28,10 @@ def print_summary(report: dict[str, Any], *, stream: TextIO) -> None:
     print(f"Strategy:          {report['strategy']}", file=stream)
     print(f"Seed:              {report['seed']}", file=stream)
     print(f"Repeat runs:       {report.get('repeat', 1)}", file=stream)
+    contract = report.get("compatibility_contract", {})
+    contract_name = contract.get("name", "default") if isinstance(contract, dict) else "default"
+    contract_hash = report.get("compatibility_contract_sha256")
+    print(f"Contract:          {contract_name}" + (f" [{contract_hash[:12]}]" if isinstance(contract_hash, str) else ""), file=stream)
     print(f"Cases executed:    {report['cases_executed']}", file=stream)
     print(f"Differences found: {summary['differences_found']}", file=stream)
     if summary.get("unstable_reference_findings") or summary.get("unstable_candidate_findings"):

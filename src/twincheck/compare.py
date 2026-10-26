@@ -6,6 +6,7 @@ import math
 from dataclasses import dataclass
 from typing import Callable, Sequence
 
+from .contract import CompatibilityContract, OutputContract, json_output_signature
 from .runner import Observation, run_program
 
 
@@ -18,6 +19,7 @@ class CompareOptions:
     ignore_stderr: bool = False
     ignore_exit_code: bool = False
     max_output_bytes: int = 1_000_000
+    contract: CompatibilityContract = CompatibilityContract()
 
 
 def normalize_output(value: str, options: CompareOptions) -> str:
@@ -28,20 +30,39 @@ def normalize_output(value: str, options: CompareOptions) -> str:
     return value
 
 
+def _output_signature(value: str, rule: OutputContract, options: CompareOptions) -> tuple[str, object]:
+    if rule.mode == "json":
+        return json_output_signature(value, rule)
+    return "text", normalize_output(value, options)
+
+
 def difference_kinds(
     reference: Observation,
     candidate: Observation,
     options: CompareOptions,
 ) -> list[str]:
     differences: list[str] = []
-    if reference.timed_out != candidate.timed_out:
+    if options.contract.compare_timeout and reference.timed_out != candidate.timed_out:
         differences.append("timeout")
-    if not options.ignore_exit_code and reference.returncode != candidate.returncode:
+    if (not options.ignore_exit_code and options.contract.compare_exit_code
+            and reference.returncode != candidate.returncode):
         differences.append("exit_code")
-    if normalize_output(reference.stdout, options) != normalize_output(candidate.stdout, options):
+
+    ref_stdout = _output_signature(reference.stdout, options.contract.stdout, options)
+    cand_stdout = _output_signature(candidate.stdout, options.contract.stdout, options)
+    if "invalid_json" in (ref_stdout[0], cand_stdout[0]):
+        differences.append("stdout_invalid_json")
+    elif ref_stdout != cand_stdout:
         differences.append("stdout")
-    if not options.ignore_stderr and normalize_output(reference.stderr, options) != normalize_output(candidate.stderr, options):
-        differences.append("stderr")
+
+    if not options.ignore_stderr:
+        ref_stderr = _output_signature(reference.stderr, options.contract.stderr, options)
+        cand_stderr = _output_signature(candidate.stderr, options.contract.stderr, options)
+        if "invalid_json" in (ref_stderr[0], cand_stderr[0]):
+            differences.append("stderr_invalid_json")
+        elif ref_stderr != cand_stderr:
+            differences.append("stderr")
+
     if any((reference.stdout_truncated, candidate.stdout_truncated,
             reference.stderr_truncated, candidate.stderr_truncated)):
         differences.append("output_truncated")
@@ -52,10 +73,10 @@ def difference_kinds(
 
 def _behavior_signature(observation: Observation, options: CompareOptions) -> tuple[object, ...]:
     return (
-        observation.timed_out,
-        observation.returncode if not options.ignore_exit_code else None,
-        normalize_output(observation.stdout, options),
-        normalize_output(observation.stderr, options) if not options.ignore_stderr else None,
+        observation.timed_out if options.contract.compare_timeout else None,
+        observation.returncode if (not options.ignore_exit_code and options.contract.compare_exit_code) else None,
+        _output_signature(observation.stdout, options.contract.stdout, options),
+        _output_signature(observation.stderr, options.contract.stderr, options) if not options.ignore_stderr else None,
         observation.stdout_truncated,
         observation.stderr_truncated,
     )

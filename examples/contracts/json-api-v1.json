@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "name": "json-api-response-compatibility",
+  "stdout": {
+    "mode": "json",
+    "ignore_paths": ["/request_id", "/meta/generated_at"]
+  },
+  "stderr": {
+    "mode": "exact"
+  },
+  "compare_exit_code": true,
+  "compare_timeout": true
+}

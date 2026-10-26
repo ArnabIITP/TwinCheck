@@ -97,6 +97,51 @@ class EngineTests(unittest.TestCase):
             self.assertEqual(report["replay"]["source_finding_number"], 1)
             self.assertEqual(report["cases_executed"], 1)
 
+
+    def test_counterexample_pack_replays_after_candidate_fix(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report_path = Path(tmp) / "source-report.json"
+            pack_path = Path(tmp) / "regression-pack"
+            replay_path = Path(tmp) / "replayed-report.json"
+            buggy = self.call_main([
+                "compare",
+                "--reference", f'"{sys.executable}" -c "import sys; sys.stdout.write(sys.stdin.read())"',
+                "--candidate", f'"{sys.executable}" -c "print(\'different\')"',
+                "--cases", "1", "--strategy", "text", "--output", str(report_path),
+            ])
+            self.assertEqual(buggy, 1)
+            exported = self.call_main(["export-pack", "--report", str(report_path), "--output", str(pack_path)])
+            self.assertEqual(exported, 0)
+            fixed = self.call_main([
+                "replay-pack", "--pack", str(pack_path),
+                "--reference", f'"{sys.executable}" -c "import sys; sys.stdout.write(sys.stdin.read())"',
+                "--candidate", f'"{sys.executable}" -c "import sys; sys.stdout.write(sys.stdin.read())"',
+                "--output", str(replay_path),
+            ])
+            self.assertEqual(fixed, 0)
+            replayed = json.loads(replay_path.read_text(encoding="utf-8"))
+            self.assertEqual(replayed["input_source"], "compatibility-pack-replay")
+            self.assertEqual(replayed["compatibility_pack"]["case_count"], 1)
+            self.assertEqual(replayed["summary"]["differences_found"], 0)
+
+    def test_json_compatibility_contract_ignores_declared_volatile_fields(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report_path = Path(tmp) / "contract-report.json"
+            contract_path = ROOT / "examples" / "contracts" / "json-api-v1.json"
+            code = self.call_main([
+                "compare",
+                "--reference", f'"{sys.executable}" "{ROOT / "examples/json_reference.py"}"',
+                "--candidate", f'"{sys.executable}" "{ROOT / "examples/json_candidate.py"}"',
+                "--cases", "3", "--seed", "17", "--strategy", "json",
+                "--cwd", str(ROOT), "--contract", str(contract_path),
+                "--output", str(report_path),
+            ])
+            self.assertEqual(code, 0)
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertEqual(report["summary"]["differences_found"], 0)
+            self.assertEqual(report["compatibility_contract"]["stdout"]["mode"], "json")
+            self.assertEqual(len(report["compatibility_contract_sha256"]), 64)
+
     def test_repeat_is_recorded_and_unstable_behavior_is_reported(self):
         report = run_comparison(
             f'"{sys.executable}" -c "print(1)"',

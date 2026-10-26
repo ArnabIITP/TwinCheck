@@ -57,22 +57,23 @@ TwinCheck compares the observable behavior of a reference command and a candidat
 - Terminal summary and JSON report.
 - Unit tests, sample bug, CI workflow, security policy, contribution guide, and roadmap.
 
-### v0.2 — Reproduction and reporting
+### v0.2 — Contract-driven compatibility (current alpha)
 
-- A clear re-run command for each finding, with correct quoting for the current platform.
-- Bounded side-by-side stdout/stderr diff excerpts.
-- JUnit XML export for standard test dashboards.
-- Replay and promotion of minimized inputs into a regression corpus.
-- Stronger validation for command and corpus configuration.
-- A stable report schema with backward-compatibility tests.
+- Versioned, strictly validated compatibility contracts.
+- Exact-text or structural-JSON comparison for stdout and stderr.
+- JSON Pointer ignore paths for explicitly volatile response fields.
+- Contract fingerprint included in every evidence report.
+- Contract-aware stability checks and minimization.
+- JUnit XML export, saved-finding replay, and contract-pinned regression pack export/replay.
+- Remaining work: shell-escaped reproduction commands, bounded diff previews, and broader cross-platform validation.
 
-### v0.3 — Structured inputs
+### v0.3 — Structured input generation and adapters
 
 - JSON Schema-driven generation with deterministic seeds.
-- An adapter interface for request/response protocols.
-- A local HTTP adapter with explicit server lifecycle and readiness checks.
-- Pluggable output equivalence rules for semantically equivalent JSON, ordering, or normalization.
+- Adapter interface for request/response protocols.
+- Local HTTP adapter with explicit server lifecycle and readiness checks.
 - Optional environment-variable and locale controls.
+- Contract-aware HTTP status/header/body rules only after the CLI contract API has been stabilized by use.
 
 ### v0.4 — Feedback and observation
 
@@ -103,7 +104,9 @@ TwinCheck compares the observable behavior of a reference command and a candidat
 
 - `generators.py`: deterministic strategies and corpus loading.
 - `runner.py`: parsed argv, process invocation, stdin/argument input, timeout, raw observations.
-- `compare.py`: output normalization, discrepancy categories, and minimization.
+- `compare.py`: output normalization, contract-aware discrepancy categories, repeated-run comparison, and minimization.
+- `contract.py`: versioned contract validation, JSON Pointer redaction, and contract fingerprinting.
+- `packs.py`: portable counterexample packs, manifest validation, and case hash verification.
 - `engine.py`: orchestration, per-case findings, aggregate summary and limitations.
 - `report.py`: stable JSON serialization and terminal summary.
 - `cli.py`: argument parsing, exit codes, and output destinations.
@@ -185,8 +188,8 @@ GitHub stars and downloads are useful reach signals but do not substitute for th
 
 ## 12. Immediate next actions
 
-1. Publish v0.1 to a private repository and keep the initial commit small and reviewable.
-2. Ask 3–5 developers who maintain parsers, ports, or replacement tools to try the demo.
-3. Collect representative compatibility failures and add them as tests only when redistribution is permitted.
-4. Prioritize v0.2 based on repeated user pain, not the most impressive-sounding feature.
-5. Make a public release after install instructions, CI, license, and security notes are verified.
+1. Validate JSON-semantic contracts against real response pairs and edge cases, including malformed JSON, number forms, escaped JSON Pointers, and ignored arrays.
+2. Ask 3–5 developers who maintain parsers, ports, or replacement tools whether the contract/report workflow fits their compatibility checks.
+3. Add portable regression bundles with pinned contract hashes and replay them in CI.
+4. Use real usage to choose the first structured adapter; avoid claiming a universal compatibility platform before multiple domains work well.
+5. Make a public release after cross-platform CI, install instructions, report schema, license, and security boundaries are verified.

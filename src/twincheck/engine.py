@@ -7,6 +7,7 @@ import time
 from typing import Any, Sequence
 
 from .compare import CompareOptions, execute_pair_runs, minimize_input
+from .contract import CompatibilityContract
 from .generators import STRATEGIES, generate_inputs, load_corpus
 from .runner import parse_command
 from .report import REPORT_SCHEMA_VERSION
@@ -66,6 +67,7 @@ def run_comparison(
     max_output_bytes: int = 1_000_000,
     input_cases: Sequence[str] | None = None,
     input_source: str | None = None,
+    contract: CompatibilityContract | None = None,
 ) -> dict[str, Any]:
     if cases < 1:
         raise ValueError("cases must be at least 1")
@@ -84,6 +86,7 @@ def run_comparison(
 
     reference_argv = parse_command(reference)
     candidate_argv = parse_command(candidate)
+    contract = contract or CompatibilityContract()
     options = CompareOptions(
         timeout=timeout,
         cwd=cwd,
@@ -92,6 +95,7 @@ def run_comparison(
         ignore_stderr=ignore_stderr,
         ignore_exit_code=ignore_exit_code,
         max_output_bytes=max_output_bytes,
+        contract=contract,
     )
 
     explicit_inputs = input_cases is not None
@@ -185,6 +189,8 @@ def run_comparison(
         "repeat": repeat,
         "max_output_bytes": max_output_bytes,
         "working_directory": cwd,
+        "compatibility_contract": contract.to_dict(),
+        "compatibility_contract_sha256": contract.sha256,
         "comparison_policy": {
             "normalize_eol": normalize_eol,
             "ignore_trailing_whitespace": ignore_trailing_whitespace,
@@ -207,12 +213,16 @@ def run_comparison(
             "unstable_candidate_findings": sum(1 for finding in findings if "candidate_unstable" in finding["differences"]),
             "truncated_output_findings": sum(1 for finding in findings if "output_truncated" in finding["differences"]),
             "output_limit_findings": sum(1 for finding in findings if "output_limit_exceeded" in finding["differences"]),
+            "invalid_json_findings": sum(1 for finding in findings if any(
+                category.endswith("_invalid_json") for category in finding["differences"]
+            )),
         },
         "limitations": [
             "A clean run is evidence only for the tested inputs, not proof of program equivalence.",
             "Programs are run locally with the current user's permissions; use only trusted commands.",
             "Inputs are UTF-8 text, passed through stdin or a {input} command-argument placeholder.",
             "Output retention is capped independently per stream; truncated observations are flagged and are not complete transcripts.",
+            "JSON output contracts compare parsed JSON values after applying declared JSON Pointer ignores; invalid JSON is always reported.",
             "Repeated runs detect observable instability but cannot explain or eliminate all nondeterminism.",
         ],
     }
