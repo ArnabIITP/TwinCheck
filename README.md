@@ -35,8 +35,11 @@ The longer-term research direction is an **evidence-first compatibility lab**: s
 | Black-box execution | Runs two commands without invoking a shell; supports stdin or a `{input}` argv placeholder |
 | Observable comparison | stdout, stderr, exit code, timeout, output truncation and repeated-run instability |
 | Output policy | Per-stream retained-byte cap; output is redirected to temporary files instead of unbounded in-memory pipes |
+| Compatibility contracts | Versioned JSON contract chooses exact or structural-JSON output comparison, JSON Pointer ignores for volatile fields, and whether exit codes/timeouts matter |
+| Contract provenance | Every report stores the normalized contract and SHA-256 fingerprint so teams can audit exactly which rules produced a result |
 | Failure minimization | Bounded delta-debugging for stable mismatches; explicitly reports the trial budget |
 | Reproduction | JSON reports retain the input and SHA-256 digest; `replay` re-runs a chosen finding with explicitly supplied commands |
+| Counterexample packs | Export findings into a validated portable regression pack that pins the compatibility contract and verifies every case hash before replay |
 | CI output | Human-readable summary, JSON evidence report, and JUnit XML with one testcase per tested input |
 | Project quality | Standard-library tests, GitHub Actions CI, issue templates, MIT license and security/contribution policies |
 
@@ -202,11 +205,79 @@ twincheck replay \
   --output reports/replay.json
 ```
 
-The finding number is 1-based and refers to its position in the source report. Replay reports record the source report path and source input digest.
+The finding number is 1-based and refers to its position in the source report. Finding replay reports record the source report path and source input digest. Pack replay reports also include the pack path, case count, source report digest, and pinned contract hash.
+
+## Compatibility contracts — the first semantic layer
+
+Byte-for-byte comparison is often too strict for JSON-facing programs: responses can be equivalent even when object key order or a generated request ID changes. TwinCheck's compatibility contract is a small, versioned policy file that defines what must remain the same. It is not an API schema validator and it does not guess what the product considers important.
+
+Try the included reference/replacement pair:
+
+```bash
+twincheck compare \
+  --reference "python examples/json_reference.py" \
+  --candidate "python examples/json_candidate.py" \
+  --strategy json \
+  --cases 5 \
+  --seed 17 \
+  --contract examples/contracts/json-api-v1.json \
+  --output reports/json-compatibility.json
+```
+
+Both examples emit the same meaningful JSON response, but `request_id` and `meta.generated_at` intentionally differ. The example contract ignores those two volatile paths; the run should complete with no behavioral differences. Remove those ignore rules to see TwinCheck find a mismatch. The command is a real local execution, not a mocked comparison.
+
+### Contract format
+
+```json
+{
+  "schema_version": 1,
+  "name": "json-api-response-compatibility",
+  "stdout": {
+    "mode": "json",
+    "ignore_paths": ["/request_id", "/meta/generated_at"]
+  },
+  "stderr": { "mode": "exact" },
+  "compare_exit_code": true,
+  "compare_timeout": true
+}
+```
+
+Use `--contract path/to/contract.json` with `compare`, `replay`, or `replay-pack` (where it must match the pack-pinned policy). The format is documented by [`docs/compatibility-contract-v1.schema.json`](docs/compatibility-contract-v1.schema.json); a full example is in [`examples/contracts/json-api-v1.json`](examples/contracts/json-api-v1.json).
+
+- `mode: "exact"` compares output text under the selected CLI normalization flags.
+- `mode: "json"` parses output as JSON, ignores insignificant whitespace and object-key order, and compares array order and remaining values. Numbers are compared by numeric value (`1` and `1.0` are treated as the same JSON number).
+- `ignore_paths` accepts non-root RFC 6901 JSON Pointers, such as `/meta/generated_at` or `/a~1b/~0key`. It is valid only for JSON mode. Missing paths are no-ops so one contract can span compatible response variants.
+- Invalid JSON is always reported as `stdout_invalid_json` or `stderr_invalid_json`; two equally malformed strings do not pass a JSON contract.
+- `compare_exit_code` and `compare_timeout` default to `true`. Set either to `false` only when the behavior is intentionally outside the compatibility promise.
+- The report embeds the normalized contract and its SHA-256 fingerprint. Review the policy before treating a green run as evidence: ignoring a field removes it from this comparison, whether or not that field is business-critical.
+
+The contract is applied consistently during repeated-run stability checks and minimization. Thus a minimized counterexample preserves the mismatch under the same semantic rules as the original run.
+
+## Turn a discovery into a regression suite
+
+A finding should not disappear into a JSON report after the bug is fixed. `export-pack` converts findings into a portable directory containing exact input files, a manifest, and the normalized contract that originally defined equivalence. Duplicate inputs are stored only once. The pack verifies each input SHA-256 before replay and refuses a mismatched contract; target commands must always be supplied explicitly.
+
+```bash
+# Start with a report containing one or more findings.
+twincheck export-pack \
+  --report reports/compatibility.json \
+  --output tests/twincheck-regressions
+
+# After fixing the candidate, replay every counterexample as a regression suite.
+twincheck replay-pack \
+  --pack tests/twincheck-regressions \
+  --reference "python reference.py" \
+  --candidate "python replacement.py" \
+  --repeat 2 \
+  --output reports/regression-replay.json \
+  --junit reports/regression-replay.xml
+```
+
+A clean replay exits `0`; a reproduced mismatch exits `1`, making the pack useful as a compatibility gate. Commit packs only when their inputs are safe to share—counterexamples can contain secrets, proprietary data, or personally identifiable information. The pack manifest format is described in [`docs/counterexample-pack-v1.schema.json`](docs/counterexample-pack-v1.schema.json).
 
 ## Reports and exit codes
 
-Each JSON report contains metadata, a per-case execution index with input SHA-256 and difference categories, detailed findings with exact input and process observations, timing, generator configuration, and limitations. `docs/report-schema-v1.schema.json` describes the report contract. The schema is versioned because reports are intended to become portable regression artifacts.
+Each JSON report contains metadata, a per-case execution index with input SHA-256 and difference categories, detailed findings with exact input and process observations, timing, generator configuration, and limitations. `docs/report-schema-v1.schema.json` describes report schema v1.2; the compatibility rules have their own independently versioned contract schema. The schema is versioned because reports are intended to become portable regression artifacts.
 
 | Exit code | Meaning |
 | ---: | --- |
@@ -239,8 +310,8 @@ TwinCheck is not trying to be a generic wrapper around an LLM. Its long-term hyp
 | Stage | Goal | Status |
 | --- | --- | --- |
 | v0.1 | Deterministic CLI differential testing, minimization, JSON report, tests and CI | Prototype implemented |
-| v0.2 | Replay workflow, JUnit output, repeated-run instability detection and bounded capture | Implemented in current development branch; needs broader cross-platform CI validation |
-| v0.3 | Schema-aware input generation, adapters and stronger report contracts | Planned |
+| v0.2 | Replay, JUnit output, repeated-run instability detection, bounded capture, versioned semantic output contracts, and contract-pinned regression packs | Implemented in the current development branch; needs broader cross-platform CI validation |
+| v0.3 | JSON Schema-aware input generation and adapter interface for request/response compatibility | Planned |
 | v0.4 | Isolated execution and richer filesystem/network observations | Planned, security-sensitive |
 | v1.0 | Stable APIs, benchmark corpus and trusted compatibility workflow | Not yet close to complete |
 

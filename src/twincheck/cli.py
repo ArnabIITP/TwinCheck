@@ -10,6 +10,8 @@ from typing import Sequence
 
 from . import __version__
 from .engine import run_comparison
+from .contract import load_contract
+from .packs import export_cases_from_report, load_compatibility_pack
 from .generators import STRATEGIES
 from .report import print_summary, report_as_json, write_junit_report, write_json_report
 
@@ -28,6 +30,7 @@ def _add_process_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--output", help="write a machine-readable JSON report to this path")
     parser.add_argument("--junit", help="write a JUnit XML report to this path for CI ingestion")
     parser.add_argument("--format", choices=("text", "json"), default="text", help="console output format")
+    parser.add_argument("--contract", help="JSON compatibility contract file controlling semantic output comparison")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -64,6 +67,20 @@ def build_parser() -> argparse.ArgumentParser:
     _add_process_options(replay)
     replay.add_argument("--report", required=True, help="path to a TwinCheck JSON report")
     replay.add_argument("--finding", type=int, default=1, help="1-based finding number in the report (default: 1)")
+
+    export_pack = subparsers.add_parser(
+        "export-pack",
+        help="export reported counterexamples and their contract as a portable regression pack",
+    )
+    export_pack.add_argument("--report", required=True, help="TwinCheck JSON report containing findings")
+    export_pack.add_argument("--output", required=True, help="new directory to create for the pack; existing paths are never overwritten")
+
+    replay_pack = subparsers.add_parser(
+        "replay-pack",
+        help="re-run every input in a contract-pinned counterexample regression pack",
+    )
+    _add_process_options(replay_pack)
+    replay_pack.add_argument("--pack", required=True, help="counterexample regression pack directory")
 
     return parser
 
@@ -102,6 +119,7 @@ def _run_replay(args: argparse.Namespace) -> dict[str, object]:
     if len(input_text.encode("utf-8")) > 10 * 1024 * 1024:
         raise ValueError("selected input exceeds 10 MiB; replay it with a dedicated corpus workflow")
 
+    contract = load_contract(args.contract) if args.contract else None
     replay_report = run_comparison(
         reference=args.reference,
         candidate=args.candidate,
@@ -118,6 +136,7 @@ def _run_replay(args: argparse.Namespace) -> dict[str, object]:
         max_output_bytes=args.max_output_bytes,
         input_cases=[input_text],
         input_source="saved-report-replay",
+        contract=contract,
     )
     replay_report["replay"] = {
         "source_report": str(report_path),
@@ -128,11 +147,56 @@ def _run_replay(args: argparse.Namespace) -> dict[str, object]:
     return replay_report
 
 
+def _run_replay_pack(args: argparse.Namespace) -> dict[str, object]:
+    inputs, contract, manifest = load_compatibility_pack(args.pack)
+    if args.contract:
+        supplied_contract = load_contract(args.contract)
+        if supplied_contract.sha256 != contract.sha256:
+            raise ValueError(
+                "supplied --contract does not match the contract pinned in the pack; "
+                "export a new pack to deliberately change the compatibility rules"
+            )
+    report = run_comparison(
+        reference=args.reference,
+        candidate=args.candidate,
+        cases=len(inputs),
+        strategy="text",
+        timeout=args.timeout,
+        cwd=args.cwd,
+        minimize=False,
+        normalize_eol=args.normalize_eol,
+        ignore_trailing_whitespace=args.ignore_trailing_whitespace,
+        ignore_stderr=args.ignore_stderr,
+        ignore_exit_code=args.ignore_exit_code,
+        repeat=args.repeat,
+        max_output_bytes=args.max_output_bytes,
+        input_cases=inputs,
+        input_source="compatibility-pack-replay",
+        contract=contract,
+    )
+    report["compatibility_pack"] = {
+        "path": str(Path(args.pack)),
+        "schema_version": manifest["schema_version"],
+        "source_report_sha256": manifest.get("source_report_sha256"),
+        "contract_sha256": manifest["contract_sha256"],
+        "case_count": len(inputs),
+        "note": "Commands were supplied explicitly to this replay invocation; saved commands are never executed.",
+    }
+    return report
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        if args.subcommand == "replay":
+        if args.subcommand == "export-pack":
+            manifest = export_cases_from_report(args.report, args.output)
+            print(f"Exported {manifest['case_count']} unique counterexample(s) to {Path(args.output)}")
+            print(f"Pinned contract SHA-256: {manifest['contract_sha256']}")
+            return 0
+        if args.subcommand == "replay-pack":
+            report = _run_replay_pack(args)
+        elif args.subcommand == "replay":
             report = _run_replay(args)
         else:
             report = run_comparison(
@@ -153,6 +217,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 ignore_exit_code=args.ignore_exit_code,
                 repeat=args.repeat,
                 max_output_bytes=args.max_output_bytes,
+                contract=load_contract(args.contract) if args.contract else None,
             )
         return _write_outputs(args, report)
     except (OSError, ValueError, json.JSONDecodeError) as exc:

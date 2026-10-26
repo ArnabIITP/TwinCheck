@@ -13,15 +13,20 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] JSON reports and non-zero exit on findings
 - [x] Standard-library test suite and CI workflow
 
-## v0.2 — structured, useful reports
+## v0.2 — contract-driven compatibility (current alpha)
 
-- [ ] Include an exact shell-escaped reproduction command for each finding
-- [ ] Output-diff previews with bounded lengths
-- [ ] JUnit XML export for CI systems
-- [ ] Persist and replay a minimized regression corpus
-- [ ] Better validation and diagnostics for command configuration
+- [x] Versioned JSON compatibility contract with strict validation
+- [x] Exact-text and structural-JSON output comparison
+- [x] RFC 6901 JSON Pointer ignore paths for volatile JSON fields
+- [x] Report the normalized contract and SHA-256 fingerprint used for each run
+- [x] Apply the same contract to repeated-run signatures and minimization
+- [x] Replay a saved finding with explicitly supplied commands
+- [x] JUnit XML export for CI systems
+- [x] Export counterexamples into a portable manifest+inputs pack, pinned to a contract hash
+- [x] Verify pack manifest, case hashes, and contract fingerprint before replay
+- [ ] Shell-escaped reproducer command and bounded side-by-side output diff
 
-## v0.3 — domain adapters
+## v0.3 — structured inputs and domain adapters
 
 - [ ] JSON Schema-driven input generation
 - [ ] HTTP request/response adapter for local test services
