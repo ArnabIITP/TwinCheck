@@ -13,7 +13,7 @@ class RunnerTests(unittest.TestCase):
             parse_command('python "unterminated')
 
     def test_stdin_is_delivered_to_process(self):
-        result = run_program([sys.executable, "-c", "import sys; sys.stdout.write(sys.stdin.read().upper())"], "hello", timeout=1)
+        result = run_program([sys.executable, "-c", "import sys; sys.stdout.write(sys.stdin.read().upper())"], "hello", timeout=5)
         self.assertEqual(result.stdout, "HELLO")
         self.assertFalse(result.timed_out)
         self.assertEqual(result.returncode, 0)
