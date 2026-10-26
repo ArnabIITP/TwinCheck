@@ -11,12 +11,13 @@ from .runner import Observation, run_program
 
 @dataclass(frozen=True)
 class CompareOptions:
-    timeout: float = 2.0
+    timeout: float = 5.0
     cwd: str | None = None
     normalize_eol: bool = False
     ignore_trailing_whitespace: bool = False
     ignore_stderr: bool = False
     ignore_exit_code: bool = False
+    max_output_bytes: int = 1_000_000
 
 
 def normalize_output(value: str, options: CompareOptions) -> str:
@@ -41,7 +42,54 @@ def difference_kinds(
         differences.append("stdout")
     if not options.ignore_stderr and normalize_output(reference.stderr, options) != normalize_output(candidate.stderr, options):
         differences.append("stderr")
+    if any((reference.stdout_truncated, candidate.stdout_truncated,
+            reference.stderr_truncated, candidate.stderr_truncated)):
+        differences.append("output_truncated")
+    if reference.output_limit_exceeded or candidate.output_limit_exceeded:
+        differences.append("output_limit_exceeded")
     return differences
+
+
+def _behavior_signature(observation: Observation, options: CompareOptions) -> tuple[object, ...]:
+    return (
+        observation.timed_out,
+        observation.returncode if not options.ignore_exit_code else None,
+        normalize_output(observation.stdout, options),
+        normalize_output(observation.stderr, options) if not options.ignore_stderr else None,
+        observation.stdout_truncated,
+        observation.stderr_truncated,
+    )
+
+
+def execute_pair_runs(
+    reference_command: Sequence[str],
+    candidate_command: Sequence[str],
+    input_text: str,
+    options: CompareOptions,
+    *,
+    repeat: int = 1,
+) -> tuple[list[Observation], list[Observation], list[str]]:
+    """Execute each implementation repeatedly and report instability explicitly."""
+    if repeat < 1:
+        raise ValueError("repeat must be at least 1")
+    reference_runs: list[Observation] = []
+    candidate_runs: list[Observation] = []
+    for _ in range(repeat):
+        reference_runs.append(run_program(
+            reference_command, input_text, timeout=options.timeout,
+            cwd=options.cwd, max_output_bytes=options.max_output_bytes,
+        ))
+        candidate_runs.append(run_program(
+            candidate_command, input_text, timeout=options.timeout,
+            cwd=options.cwd, max_output_bytes=options.max_output_bytes,
+        ))
+
+    differences = difference_kinds(reference_runs[0], candidate_runs[0], options)
+    if len({_behavior_signature(item, options) for item in reference_runs}) > 1:
+        differences.append("reference_unstable")
+    if len({_behavior_signature(item, options) for item in candidate_runs}) > 1:
+        differences.append("candidate_unstable")
+    return reference_runs, candidate_runs, differences
 
 
 def execute_pair(
@@ -49,10 +97,14 @@ def execute_pair(
     candidate_command: Sequence[str],
     input_text: str,
     options: CompareOptions,
+    *,
+    repeat: int = 1,
 ) -> tuple[Observation, Observation, list[str]]:
-    reference = run_program(reference_command, input_text, timeout=options.timeout, cwd=options.cwd)
-    candidate = run_program(candidate_command, input_text, timeout=options.timeout, cwd=options.cwd)
-    return reference, candidate, difference_kinds(reference, candidate, options)
+    """Compatibility wrapper returning the first observations plus all findings."""
+    reference_runs, candidate_runs, differences = execute_pair_runs(
+        reference_command, candidate_command, input_text, options, repeat=repeat
+    )
+    return reference_runs[0], candidate_runs[0], differences
 
 
 def minimize_input(

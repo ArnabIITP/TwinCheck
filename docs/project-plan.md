@@ -1,110 +1,192 @@
 # TwinCheck — Project Plan
 
-**Status:** v0.1 prototype. **Goal:** make behavioral compatibility testing reproducible and evidence-based.
+**Status:** v0.1 prototype / local-first CLI  
+**Primary goal:** Make behavioral compatibility testing reproducible, practical, and evidence-based.  
+**Initial audience:** Developers replacing libraries or tools, language-runtime implementers, maintainers of ports/forks, and teams migrating parsers or data processors.
 
-## 1. Problem
+## 1. Problem statement
 
-A replacement library, port, parser, or command-line tool can pass ordinary tests while disagreeing with the reference implementation on edge cases. Developers need to discover discrepancies and receive a small input that reproduces each one.
+A replacement implementation can pass its normal test suite while differing from the original on obscure inputs. Differences may include output formatting, error handling, exit codes, boundary values, Unicode, timeouts, or malformed inputs. A developer needs more than a yes/no result: they need an input that reproduces the difference and a stable artifact that can be added to a regression suite.
 
-## 2. Target users
+TwinCheck compares the observable behavior of a reference command and a candidate command against the same deterministic input cases. It records the evidence and can try to shrink a failing case.
 
-- Maintainers of alternative implementations, forks, ports, and compatibility layers.
-- Language-runtime and compiler developers comparing behavior across implementations.
-- Teams replacing parsers, serializers, command-line tools, or data processors.
-- CI engineers who need a repeatable compatibility gate.
+## 2. Product principles
 
-## 3. Principles
+1. **Execute to verify.** A finding exists only when two actual executions produce a measured difference.
+2. **Reproducible by default.** Every run records the seed, strategy, input hash, commands, and observations.
+3. **Local-first and dependency-light.** The core has no runtime third-party dependencies and does not upload inputs.
+4. **Safe defaults, honest boundaries.** Commands are launched without a shell, each run has a timeout, and documentation clearly says this is not a sandbox.
+5. **Small reliable core before broad claims.** Command-line behavior comes before browser automation, protocol reconstruction, binary analysis, or claims of formal equivalence.
+6. **AI is optional.** Future agents may suggest inputs or explain findings, but generated explanations never replace execution evidence.
 
-1. **Execute to verify:** findings arise from real executions, not AI guesses.
-2. **Reproducibility first:** preserve seed, exact input, commands, observations, and tool version.
-3. **Local by default:** no external service or runtime third-party dependency is required.
-4. **Safe claims:** passing sampled cases is not proof of equivalence.
-5. **Clear safety boundary:** commands run with the current user's permissions; this is not a sandbox.
-6. **Small core, extensible edges:** build a dependable CLI before adding protocol adapters or agents.
+## 3. Main user journeys
 
-## 4. MVP scope (v0.1)
+### Journey A — Validate a replacement
 
-- Python 3.11+ CLI with a compare command.
-- Deterministic input generation: mixed, text, integer, and JSON-shaped text strategies.
-- Optional local UTF-8 corpus, loaded in stable path order.
-- Paired command execution, stdin support, {input} argument substitution, and timeouts.
-- Compare stdout, stderr, exit code, and timeout status, with opt-in normalization flags.
-- Bounded delta-debugging minimizer for a limited number of findings.
-- JSON report containing input, digest, difference categories, process observations, seed, and summary.
-- Examples, tests, CI, contribution guidelines, security policy, and MIT license.
+1. Choose a known-good reference command and a replacement command.
+2. Run a seeded set of built-in edge cases and generated inputs.
+3. Review a terminal summary and machine-readable JSON report.
+4. Re-run an individual input manually.
+5. Minimize the input and add it to the replacement's normal test suite.
 
-## 5. Non-goals for v0.1
+### Journey B — Re-run a discovered bug
 
-- Formal proof of program equivalence.
-- Safe execution of untrusted programs.
-- Binary analysis, disassembly, or network protocol capture.
-- Filesystem/network side-effect observation.
-- AI-generated findings without execution evidence.
-- Universal language-specific fuzzing.
+1. Put known UTF-8 regression inputs in a corpus directory.
+2. Execute both implementations against the corpus.
+3. Fail CI if any configured observable differs.
+4. Keep the report as an artifact for review and debugging.
 
-## 6. Architecture
+### Journey C — Extend a domain
 
-- src/twincheck/generators.py: seeded test-case generation and corpus loading.
-- src/twincheck/runner.py: shell-free process invocation, stdin, timeouts, and observations.
-- src/twincheck/compare.py: output normalization, mismatch categories, and minimization.
-- src/twincheck/engine.py: orchestrates cases, execution, findings, and report metadata.
-- src/twincheck/report.py: JSON serialization and terminal summary.
-- src/twincheck/cli.py: argument parsing, validation, output formatting, and exit codes.
+1. Add a domain-specific input adapter or generator.
+2. Define which outputs count as equivalent and which are meaningful differences.
+3. Add fixed regression cases and tests for the adapter.
+4. Document limitations and reproduce benchmark claims.
 
-Dependencies flow inward: the CLI calls the engine; the engine composes generation, runner, comparison, and reporting.
+## 4. Scope
 
-## 7. Quality gates
+### v0.1 — Implemented foundation
 
-- Tests cover deterministic generation, unique requested cases, boundaries, command parsing, stdin, argument substitution, timeouts, normalization, exit codes, minimizer behavior, and report validity.
-- CI runs the standard-library test suite on Python 3.11, 3.12, and 3.13.
-- The demo finds an intentional difference and produces valid JSON.
-- Errors fail clearly instead of silently skipping invalid configuration.
-- Performance claims include a reproducible workload and environment.
+- Python 3.11+ command-line package.
+- Deterministic, seeded text, integer, JSON, and mixed input strategies.
+- Optional UTF-8 corpus directory.
+- Shell-free subprocess invocation, stdin or `{input}` argument mode, and per-process timeout.
+- Comparisons for stdout, stderr, return code, and timeout status.
+- Opt-in output normalization controls.
+- Bounded delta-debugging minimizer.
+- Terminal summary and JSON report.
+- Unit tests, sample bug, CI workflow, security policy, contribution guide, and roadmap.
 
-## 8. Roadmap
+### v0.2 — Reproduction and reporting
 
-### v0.2 — Reproducers and report ergonomics
-- Shell-escaped re-run commands.
-- Bounded output-difference previews.
-- Versioned report schema and replay of saved cases.
-- Optional JUnit/SARIF export after the report contract stabilizes.
+- A clear re-run command for each finding, with correct quoting for the current platform.
+- Bounded side-by-side stdout/stderr diff excerpts.
+- JUnit XML export for standard test dashboards.
+- Replay and promotion of minimized inputs into a regression corpus.
+- Stronger validation for command and corpus configuration.
+- A stable report schema with backward-compatibility tests.
 
-### v0.3 — Structured adapters
-- Schema-driven JSON generation.
-- An adapter interface for local HTTP and protocol domains.
-- Explicit policy for environment variables and nondeterministic outputs.
+### v0.3 — Structured inputs
 
-### v0.4 — Isolation and observability
-- Separately reviewed container-backed execution.
-- Resource limits and bounded output capture.
-- Optional filesystem-effect observation.
+- JSON Schema-driven generation with deterministic seeds.
+- An adapter interface for request/response protocols.
+- A local HTTP adapter with explicit server lifecycle and readiness checks.
+- Pluggable output equivalence rules for semantically equivalent JSON, ordering, or normalization.
+- Optional environment-variable and locale controls.
 
-### v1.0 — Trustworthy compatibility workflows
-- Stable API and report schema.
-- Regression fixtures from minimized cases.
-- Reproducible benchmark suite and methodology.
-- Security review for any isolation backend.
+### v0.4 — Feedback and observation
 
-## 9. Risks
+- Optional coverage feedback for instrumented targets.
+- Filesystem observation for explicitly configured temporary directories.
+- A container-isolation backend for supported environments.
+- Resource limits for memory, process counts, output size, and runtime where the platform supports them.
+- Better handling of nondeterminism, flaky observations, and repeated trials.
+
+### v1.0 — Reliable compatibility workflow
+
+- Stable public Python API and report schema.
+- Documented platform support and reproducibility contract.
+- Regression fixture export and CI integrations.
+- Performance evaluation with reproducible datasets and published methodology.
+- Security review for isolation and process management.
+- Clear support policy and migration notes.
+
+## 5. Non-goals for v0.x
+
+- Proving arbitrary programs equivalent from sampled inputs.
+- Executing untrusted programs safely without an isolation backend.
+- Reconstructing an application's internals or decompiling binaries.
+- Requiring an LLM, cloud account, telemetry, or network access at runtime.
+- Pretending all outputs should be byte-for-byte identical; domain adapters must define their equivalence rules.
+
+## 6. Technical architecture
+
+- `generators.py`: deterministic strategies and corpus loading.
+- `runner.py`: parsed argv, process invocation, stdin/argument input, timeout, raw observations.
+- `compare.py`: output normalization, discrepancy categories, and minimization.
+- `engine.py`: orchestration, per-case findings, aggregate summary and limitations.
+- `report.py`: stable JSON serialization and terminal summary.
+- `cli.py`: argument parsing, exit codes, and output destinations.
+
+The dependency direction is inward: the CLI calls the engine; the engine combines generators, runner, comparison logic, and reporting. Core execution uses only the Python standard library.
+
+### Proposed finding contract
+
+Each finding should preserve:
+
+- stable case index and SHA-256 of the exact UTF-8 input;
+- exact input text (with JSON escaping when serialized);
+- difference categories;
+- reference and candidate return codes, stdout, stderr, timeout status, and durations;
+- whether minimization was attempted, trial count, and whether the budget was exhausted.
+
+Do not compare durations by default: scheduler noise would create excessive false positives. A future performance mode should be a separate feature with warm-up, repetition, statistics, and explicit thresholds.
+
+## 7. Safety and privacy model
+
+The program runs locally and makes no network requests as part of its core operation. However, target commands inherit the current user's permissions and may access local files or networks. `shell=False` reduces shell interpretation; it does not make a target safe.
+
+Before a safe-by-default untrusted-target mode can be advertised, the project needs a supported isolation backend, resource limits, output caps, process-tree cleanup, and adversarial tests. Until then:
+
+- execute only commands you trust;
+- do not use production secrets or sensitive corpora;
+- consider a disposable VM/container for unfamiliar targets;
+- treat reports as potentially sensitive because they store exact inputs and outputs;
+- review changes to process execution and report serialization as security-sensitive.
+
+## 8. Testing strategy
+
+- Unit tests for deterministic generation, output normalization, difference categories, timeouts, command parsing, and minimizer behavior.
+- Integration tests using tiny known reference/candidate programs.
+- Regression tests for every confirmed bug in the engine.
+- CLI tests for exit codes and valid JSON reports.
+- CI matrix for supported Python versions.
+- Future adapter contract tests, platform-specific process tests, and property tests for input and report invariants.
+
+Every performance claim should include environment, workload size, command lines, trial count, and a reproducible script. Do not use a demo output as a benchmark claim.
+
+## 9. Release gates
+
+A version may ship only when:
+
+- all tests pass on supported Python versions;
+- README examples work from a fresh checkout;
+- help text and exit codes match the documentation;
+- reports can be parsed as valid JSON and include schema/version fields;
+- known limitations and security implications are visible;
+- the changelog identifies user-visible changes;
+- no credentials, proprietary inputs, personal data, or generated cache files are included.
+
+## 10. Success metrics
+
+Track usefulness rather than vanity metrics alone:
+
+- percentage of findings that can be reproduced with the saved input;
+- minimizer success rate and median reduction in input size;
+- false-positive rate for repeated runs;
+- time to first useful finding on a published benchmark corpus;
+- number of confirmed user-reported bugs fixed;
+- adapter adoption and regression fixtures contributed by users;
+- onboarding success: how quickly a new user can compare two toy programs from a clean checkout.
+
+GitHub stars and downloads are useful reach signals but do not substitute for these measures.
+
+## 11. Risks and mitigations
 
 | Risk | Mitigation |
-| --- | --- |
+|---|---|
 | False confidence after a clean run | State prominently that sampled tests do not prove equivalence. |
-| Dangerous target commands | Shell-free invocation, timeouts, warnings, and future isolation. |
-| Unbounded output or memory use | Document current limit; prioritize output caps before untrusted targets. |
-| Slow minimization | Small default trial budget and configurable limits. |
-| Unclear user value | Validate with maintainers of parsers, ports, and replacements. |
-| Scope creep | Keep v0.x centered on CLI differential testing. |
+| Dangerous target commands | Shell-free invocation, timeout, warnings, and future isolation backend. |
+| Unbounded output or memory use | Document current limit; add bounded output capture before untrusted-target support. |
+| Nondeterministic targets | Repeat mode and explicit flakiness handling in a later version. |
+| Slow minimization | Default to a small trial budget, make limits explicit, report trials. |
+| Hard-to-compare structured output | Make equivalence policies explicit and domain-specific. |
+| Scope creep | Keep v0.x centered on CLI differential testing until release gates are met. |
 
-## 10. Success measures
+## 12. Immediate next actions
 
-Prioritize usefulness over vanity metrics: percentage of findings reproduced from saved inputs; minimizer reduction rate; false-positive rate on repeat runs; time to first useful finding; confirmed compatibility bugs fixed; regression fixtures contributed; and onboarding success. Stars and downloads are reach signals, not product validation.
-
-## 11. Release checklist
-
-- Tests pass on supported Python versions.
-- Installation and README demo work from a clean checkout.
-- Commands and documented exit codes match actual behavior.
-- Reports are valid JSON and contain enough evidence to reproduce findings.
-- License, security boundaries, changelog, and known limitations are clear.
-- No credentials, proprietary inputs, personal data, or generated caches are committed.
+1. Publish v0.1 to a private repository and keep the initial commit small and reviewable.
+2. Ask 3–5 developers who maintain parsers, ports, or replacement tools to try the demo.
+3. Collect representative compatibility failures and add them as tests only when redistribution is permitted.
+4. Prioritize v0.2 based on repeated user pain, not the most impressive-sounding feature.
+5. Make a public release after install instructions, CI, license, and security notes are verified.

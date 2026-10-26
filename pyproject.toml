@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "twincheck"
-version = "0.1.0"
+version = "0.2.0a1"
 description = "Find behavioral differences between two programs with deterministic differential testing."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -29,9 +29,9 @@ dependencies = []
 twincheck = "twincheck.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/ArnabIITP/TwinCheck"
-Repository = "https://github.com/ArnabIITP/TwinCheck"
-Issues = "https://github.com/ArnabIITP/TwinCheck/issues"
+Homepage = "https://github.com/ArnabIITP/twincheck"
+Repository = "https://github.com/ArnabIITP/twincheck"
+Issues = "https://github.com/ArnabIITP/twincheck/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
