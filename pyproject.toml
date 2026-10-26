@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "twincheck"
+version = "0.1.0"
+description = "Find behavioral differences between two programs with deterministic differential testing."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "TwinCheck contributors" }]
+keywords = ["differential-testing", "fuzzing", "testing", "compatibility", "regression-testing"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Testing",
+]
+dependencies = []
+
+[project.scripts]
+twincheck = "twincheck.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ArnabIITP/TwinCheck"
+Repository = "https://github.com/ArnabIITP/TwinCheck"
+Issues = "https://github.com/ArnabIITP/TwinCheck/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+pythonpath = ["src"]
