@@ -64,6 +64,18 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Run the fixed corpus end to end through comparison, reset-health verification, pack export, and replay in CI
 - [x] Run the full suite and clean-install/CLI/corpus smoke checks on Python 3.11, 3.12 and 3.13 in GitHub Actions
 
+## v0.9 — reproducible stateful evidence
+
+- [x] Pin all corpus sequences, contracts, synthetic service fixture, and schemas with SHA-256 hashes
+- [x] Add a clean volatile-field control and fixed response drift, stateful ordering, idempotency/retry, and stale-reset guard cases
+- [x] Add a single corpus verification command with expected-outcome checks
+- [x] Validate generated reports and regression-pack manifests against the checked-in JSON Schemas
+- [x] Verify safe difference paths and secret-free explanatory metadata
+- [x] Exercise a seeded minimization and assert that the named mismatch remains reproducible
+- [x] Export/replay a pack and test rejection of tampered content
+- [x] Add Windows CI alongside the Python 3.11/3.12/3.13 Linux matrix
+- [ ] Merge only after all four CI matrix jobs are green
+
 ## Later — research and expansion, not release blockers
 
 - [ ] Design an adapter protocol for optional instrumentation or coverage feedback; first define its trust and reproducibility contract
