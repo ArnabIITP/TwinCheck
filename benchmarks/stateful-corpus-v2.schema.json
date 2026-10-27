@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArnabIITP/TwinCheck/blob/main/benchmarks/stateful-corpus-v2.schema.json",
+  "title": "TwinCheck Stateful Regression Corpus Manifest v2",
+  "type": "object",
+  "required": ["schema_version", "name", "description", "seed", "repeat", "timeout_seconds", "max_output_bytes", "fixture_hashes", "cases", "known_blind_spots"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "seed": { "type": "integer" },
+    "repeat": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "timeout_seconds": { "type": "number", "exclusiveMinimum": 0, "maximum": 30 },
+    "max_output_bytes": { "type": "integer", "minimum": 1, "maximum": 100000 },
+    "fixture_hashes": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "type": "string", "minLength": 1 },
+      "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+    },
+    "cases": { "type": "array", "minItems": 5, "items": { "$ref": "#/$defs/case" } },
+    "known_blind_spots": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "server_config": {
+      "type": "object",
+      "properties": {
+        "total_delta": { "type": "integer" },
+        "increment_on_read": { "type": "boolean" },
+        "broken_reset": { "type": "boolean" },
+        "initial_item_quantity": { "type": ["integer", "null"] },
+        "idempotency_defect": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "case": {
+      "type": "object",
+      "required": ["id", "mode", "sequence", "contract", "reference", "candidate", "expected"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$" },
+        "mode": { "enum": ["compare", "explore", "reset_guard"] },
+        "sequence": { "type": "string", "minLength": 1 },
+        "contract": { "type": "string", "minLength": 1 },
+        "reset_sequence": { "type": "string", "minLength": 1 },
+        "request_headers": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [{ "type": "string" }, { "type": "string" }],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "reference": { "$ref": "#/$defs/server_config" },
+        "candidate": { "$ref": "#/$defs/server_config" },
+        "exploration": {
+          "type": "object",
+          "properties": {
+            "cases": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "minimization_trials": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "minimize": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "expected": {
+          "type": "object",
+          "required": ["outcome", "difference_categories"],
+          "properties": {
+            "outcome": { "enum": ["pass", "finding", "minimized_finding", "reset_guard"] },
+            "difference_categories": { "type": "array", "items": { "type": "string" } },
+            "step_name": { "type": ["string", "null"] },
+            "safe_difference_pointers": { "type": "array", "items": { "type": "string" } },
+            "minimum_steps_after_minimization": { "type": "integer", "minimum": 1 },
+            "guard_error_contains": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "reset_guard" } }, "required": ["mode"] },
+          "then": {
+            "properties": {
+              "expected": {
+                "properties": {
+                  "outcome": { "const": "reset_guard" },
+                  "guard_error_contains": { "type": "string" }
+                },
+                "required": ["guard_error_contains"]
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}
