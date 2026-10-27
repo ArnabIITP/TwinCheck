@@ -71,7 +71,8 @@
             "difference_categories": { "type": "array", "items": { "type": "string" } },
             "step_name": { "type": ["string", "null"] },
             "safe_difference_pointers": { "type": "array", "items": { "type": "string" } },
-            "minimum_steps_after_minimization": { "type": "integer", "minimum": 1 },
+            "maximum_steps_after_minimization": { "type": "integer", "minimum": 1 },
+            "workflow_requests": { "type": "integer", "minimum": 0 }
             "guard_error_contains": { "type": "string" }
           },
           "additionalProperties": false
