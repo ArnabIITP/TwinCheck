@@ -13,9 +13,12 @@ Thanks for helping improve TwinCheck. The project prioritizes reproducible findi
 ```bash
 python -m pip install -e .
 python -m unittest discover -s tests -v
+python -m pip install --upgrade build twine
+python -m build --outdir dist
+python scripts/verify_distribution.py --dist-dir dist
 ```
 
-No runtime dependencies are required. Keep the test suite runnable with the Python standard library wherever practical.
+The distribution check validates the built wheel and source archive, then installs the wheel into a temporary environment outside the checkout and exercises the CLI entry point. No runtime dependencies are required. Keep the test suite runnable with the Python standard library wherever practical.
 
 ## Pull request expectations
 
@@ -29,6 +32,10 @@ No runtime dependencies are required. Keep the test suite runnable with the Pyth
 ## Code style
 
 Follow standard Python conventions, add types for public interfaces, keep functions focused, and prefer clear error messages over silent fallback. Do not broaden permissions or use `shell=True` to make a command work.
+
+## Release and compatibility policy
+
+Before changing CLI flags, report schemas or file formats, read [the release and compatibility policy](docs/release-process.md). TwinCheck is pre-1.0: the Python import API is not stable, and changes to documented interfaces must be reflected in the changelog and relevant schema/version notes. The manual release-candidate workflow builds and verifies artifacts; it intentionally does not publish packages.
 
 ## Security-sensitive changes
 
