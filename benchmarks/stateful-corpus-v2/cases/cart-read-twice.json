@@ -20,26 +20,17 @@
       "body": {
         "sku": "synthetic-sku",
         "quantity": 2
-      },
-      "depends_on": [
-        "create-cart"
-      ]
+      }
     },
     {
       "name": "read-cart-1",
       "method": "GET",
-      "path": "/carts/{{cart_id}}",
-      "depends_on": [
-        "add-item"
-      ]
+      "path": "/carts/{{cart_id}}"
     },
     {
       "name": "read-cart-2",
       "method": "GET",
-      "path": "/carts/{{cart_id}}",
-      "depends_on": [
-        "read-cart-1"
-      ]
+      "path": "/carts/{{cart_id}}"
     }
   ]
 }
