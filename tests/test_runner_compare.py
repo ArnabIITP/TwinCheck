@@ -39,7 +39,8 @@ class RunnerTests(unittest.TestCase):
         self.assertTrue(result.stdout_truncated)
         self.assertGreater(result.stdout_bytes_seen, 1024)
         self.assertLessEqual(result.stdout_bytes_seen, 50000)
-        self.assertIn(result.returncode, (0, -9, -15, 1))
+        allowed_returncodes = (0, -9, -15, 1) if os.name == "nt" else (0, -9, -15)
+        self.assertIn(result.returncode, allowed_returncodes)
         self.assertTrue(result.output_limit_exceeded)
 
 
