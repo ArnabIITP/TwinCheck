@@ -446,7 +446,7 @@ See [Threat Model](docs/threat-model.md), [Architecture](docs/architecture.md), 
 
 ## Project direction
 
-TwinCheck is being built around one product promise: a compatibility claim should be backed by observable executions, a clearly stated comparison policy, and a counterexample another developer can reproduce. Its differentiator should be evidence quality and a dependable regression workflow, not the number of mutation operators. The v0.9 development milestone adds a hash-pinned corpus covering a clean control, response-value drift, stateful read ordering, idempotency/retry behavior and reset-guard failures. A single verifier validates schemas, runs the cases, checks minimization, exports/replays a regression pack and detects tampering. Instrumented feedback, broad external benchmarks, additional adapters and any isolation backend remain separate research projects, not claims of current capability. See the [project plan](docs/project-plan.md) and [roadmap](docs/roadmap.md).
+TwinCheck is being built around one product promise: a compatibility claim should be backed by observable executions, a clearly stated comparison policy, and a counterexample another developer can reproduce. Its differentiator should be evidence quality and a dependable regression workflow, not the number of mutation operators. The v0.9 milestone added a hash-pinned corpus with a single verifier for expected findings, minimization, regression-pack replay and tamper detection. The v0.10 alpha adds opt-in observation-driven generation: static exploration remains the default, while adaptive mode can produce bounded paired mutations after new response branches or transitions. A fixed-fixture comparison script reports the same case budget and seed for both modes. This remains a heuristic, not general state-machine learning, and response-shape novelty is not source-code coverage. See [adaptive exploration](docs/adaptive-stateful-exploration-v1.md), the [project plan](docs/project-plan.md) and [roadmap](docs/roadmap.md).
 
 ### Roadmap summary
 
@@ -461,6 +461,7 @@ TwinCheck is being built around one product promise: a compatibility claim shoul
 | v0.7 | Portable stateful HTTP regression packs, integrity checks, pinned reset and contract, CLI replay | Implemented on the preceding development baseline; release status is separate from source control |
 | v0.8 | Reset-health verification, dependency metadata, secret-redaction regression tests, and a reproducible synthetic corpus | Merged as `0.8.0a1` alpha; Python 3.11/3.12/3.13 CI matrix green |
 | v0.9 | Multi-failure stateful corpus, safe difference explanations, schema validation, minimization and pack replay | Merged as `0.9.0a1` alpha; Linux/Windows CI matrix green |
+| v0.10 | Opt-in observation-driven candidate generation, fixed-fixture mode comparison and deterministic adaptive evidence | Merged as `0.10.0a1` alpha; Linux/Windows CI matrix green |
 | Later | Isolation and richer observability | Planned, security-sensitive |
 | v1.0 | Stable APIs, benchmark corpus and trusted compatibility workflow | Not yet close to complete |
 
