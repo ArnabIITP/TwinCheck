@@ -87,6 +87,17 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Add a fixed-fixture static/adaptive comparison report and run it in Linux/Windows CI
 - [x] Document that adaptive feedback is a bounded heuristic, not learned state-machine coverage
 
+## Release readiness
+
+- [x] Document the alpha compatibility promise and distinguish the CLI, versioned file schemas and internal Python modules
+- [x] Build one wheel and one source archive with Python packaging tools
+- [x] Check distribution metadata and install the built wheel into a clean virtual environment outside the checkout
+- [x] Run distribution validation in the Linux/Python 3.11–3.13 and Windows/Python 3.11 CI matrix
+- [x] Add a manual release-candidate workflow that uploads verified artifacts without publishing them
+- [x] Document the release checklist, source archive inspection and explicit publish approval gate
+- [ ] Publish to PyPI only after separate maintainer approval and a final artifact review
+- [ ] Establish a stable public Python API before promising API compatibility
+
 ## Later — research and expansion, not release blockers
 
 - [ ] Design an adapter protocol for optional instrumentation or coverage feedback; first define its trust and reproducibility contract

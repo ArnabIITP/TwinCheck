@@ -1,0 +1,14 @@
+include README.md
+include CHANGELOG.md
+include CONTRIBUTING.md
+include SECURITY.md
+include LICENSE
+include pyproject.toml
+
+recursive-include src *.py
+recursive-include tests *.py
+recursive-include scripts *.py
+recursive-include docs *.md *.json
+recursive-include examples *.md *.json
+recursive-include benchmarks *.md *.py *.json
+
