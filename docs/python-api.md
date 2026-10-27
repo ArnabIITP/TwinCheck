@@ -32,6 +32,7 @@ Other package modules and their internal names may change without API compatibil
 `compare_commands(reference, candidate, ...)` executes both commands for the same generated text inputs and returns a JSON-serializable evidence report.
 
 ```python
+import shlex
 import sys
 from twincheck import compare_commands, contract_from_dict, write_json_report
 
@@ -43,9 +44,12 @@ contract = contract_from_dict({
     "compare_timeout": True,
 })
 
+reference_command = shlex.join([sys.executable, "reference.py"])
+candidate_command = shlex.join([sys.executable, "replacement.py"])
+
 report = compare_commands(
-    f"{sys.executable} reference.py",
-    f"{sys.executable} replacement.py",
+    reference_command,
+    candidate_command,
     cases=100,
     seed=42,
     strategy="mixed",
