@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0a1 - Verifiable stateful regression workflows (alpha)
+
+- Add an optional versioned reset-health contract to stateful sequences. After every configured reset, TwinCheck makes a separate read-only GET request and checks explicit scalar JSON Pointer assertions on both local targets before running the tested workflow.
+- Record whether reset checking was status-only or assertion-verified. Health summaries retain assertion paths and pass/fail metadata, not observed response values.
+- Add explicit `depends_on` metadata to stateful steps and reject dependencies that are duplicated, implicit, unknown, or ordered after their consumer.
+- Prevent the bounded adjacent-swap explorer from deliberately reversing directly declared dependencies.
+- Add a versioned synthetic stateful regression corpus, a broken-reset negative control, and reproducibility instructions.
+- Add regression coverage for a reset endpoint that returns 200 without clearing state and for invalid dependency ordering.
+
+This remains an alpha. A health contract verifies only the declared assertions, not all hidden state. Loopback-only HTTP targeting is not a sandbox. Instrumented coverage, dynamically generated mutation operators, and broad real-world benchmarking remain future work.
+
 ## 0.7.0a1 - Portable stateful regression packs (alpha work in progress)
 
 - Add `export-http-sequence-pack` to save one stateful finding as a regression pack containing the request sequence, optional reset workflow, and pinned compatibility contract.
