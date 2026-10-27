@@ -44,7 +44,8 @@ The longer-term research direction is an **evidence-first compatibility lab**: s
 | Reproduction | JSON reports retain the input and SHA-256 digest; `replay` re-runs a chosen finding with explicitly supplied commands |
 | Counterexample packs | Export CLI input findings and stateful HTTP workflows into separate portable packs; pin contracts and hashes before replay |
 | CI output | Human-readable summary, JSON evidence report, and JUnit XML with one testcase per tested input |
-| Public Python API | Versioned API v1 for command-line comparisons, compatibility contracts, and JSON/JUnit report helpers; documented and compatibility-tested |\n| Project quality | Standard-library tests, GitHub Actions CI, issue templates, MIT license and security/contribution policies |
+| Public Python API | Versioned API v1 for command-line comparisons, compatibility contracts, and JSON/JUnit report helpers; documented and compatibility-tested |
+| Project quality | Standard-library tests, GitHub Actions CI, issue templates, MIT license and security/contribution policies |
 
 This is a narrow foundation by design. It does not yet analyze arbitrary binaries, reconstruct protocols, observe filesystem/network side effects, perform coverage-guided instrumentation, or safely execute untrusted code.
 
@@ -481,7 +482,8 @@ TwinCheck is being built around one product promise: a compatibility claim shoul
 | v0.7 | Portable stateful HTTP regression packs, integrity checks, pinned reset and contract, CLI replay | Implemented on the preceding development baseline; release status is separate from source control |
 | v0.8 | Reset-health verification, dependency metadata, secret-redaction regression tests, and a reproducible synthetic corpus | Merged as `0.8.0a1` alpha; Python 3.11/3.12/3.13 CI matrix green |
 | v0.9 | Multi-failure stateful corpus, safe difference explanations, schema validation, minimization and pack replay | Merged as `0.9.0a1` alpha; Linux/Windows CI matrix green |
-| v0.11 | Public Python API v1 for command comparisons, contracts and report output, with compatibility tests | `0.11.0a1` alpha; API smoke test runs against the built wheel |\n| v0.10 | Opt-in observation-driven candidate generation, fixed-fixture mode comparison and deterministic adaptive evidence | `0.10.0a1` alpha; Linux/Windows matrix and comparison gate included |
+| v0.11 | Public Python API v1 for command comparisons, contracts and report output, with compatibility tests | `0.11.0a1` alpha; API smoke test runs against the built wheel |
+| v0.10 | Opt-in observation-driven candidate generation, fixed-fixture mode comparison and deterministic adaptive evidence | `0.10.0a1` alpha; Linux/Windows matrix and comparison gate included |
 | Later | Isolation and richer observability | Planned, security-sensitive |
 | v1.0 | Stable APIs, benchmark corpus and trusted compatibility workflow | Not released; compatibility policy and package validation are being established |
 
