@@ -16,6 +16,7 @@ from twincheck.stateful_http import (
     run_http_sequence_comparison,
     validate_sequence,
 )
+from twincheck.stateful_packs import export_stateful_sequence_pack
 from twincheck.stateful_explore import (
     _select_next_variant,
     _variant_mutation_features,
@@ -272,7 +273,46 @@ class StatefulHttpTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "explicitly named earlier step"):
             validate_sequence(invalid)
 
-    def test_variant_generator_covers_boundaries_transitions_and_is_seeded(self):
+    def test_header_secret_is_absent_from_report_and_portable_pack(self):
+        secret = "twincheck-test-secret-9172"
+        self.candidate.base_total_delta = 1
+        self.candidate.total_delta = 1
+        sequence = _sequence()
+        source = json.dumps(sequence, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        reset_sequence = {
+            "schema_version": 1, "name": "reset-with-health",
+            "steps": [{"name": "reset-state", "method": "POST", "path": "/__test/reset"}],
+            "health": {"schema_version": 1, "method": "GET", "path": "/__test/state",
+                       "assertions": [{"pointer": "/body/item_count", "equals": 0}]},
+        }
+        reset_source = json.dumps(reset_sequence, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        report = run_http_sequence_comparison(
+            reference_url=f"http://127.0.0.1:{self.reference.server_port}",
+            candidate_url=f"http://127.0.0.1:{self.candidate.server_port}",
+            sequence=sequence,
+            sequence_sha256=hashlib.sha256(source).hexdigest(),
+            reset_sequence=reset_sequence,
+            reset_sequence_sha256=hashlib.sha256(reset_source).hexdigest(),
+            request_headers=(("X-Test-Secret", secret),),
+            contract=_contract(),
+        )
+        self.assertGreater(report["summary"]["differences_found"], 0)
+        self.assertNotIn(secret, json.dumps(report))
+        self.assertIn("x-test-secret", report["http_adapter"]["request_header_names"])
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            report_path = root / "report.json"
+            report_path.write_text(json.dumps(report), encoding="utf-8")
+            pack_path = root / "pack"
+            export_stateful_sequence_pack(report_path, pack_path)
+            pack_text = "".join(
+                file.read_text(encoding="utf-8")
+                for file in pack_path.iterdir()
+                if file.is_file()
+            )
+            self.assertNotIn(secret, pack_text)
+
+def test_variant_generator_covers_boundaries_transitions_and_is_seeded(self):
         sequence = _sequence()
         first = generate_sequence_variants(sequence, max_cases=30, seed=19)
         second = generate_sequence_variants(sequence, max_cases=30, seed=19)
