@@ -10,9 +10,11 @@ import argparse
 import os
 import subprocess
 import sys
+import tarfile
 import tempfile
 import tomllib
 import venv
+import zipfile
 from pathlib import Path
 
 
@@ -58,6 +60,40 @@ def main() -> int:
         [sys.executable, "-m", "twine", "check", "--strict", str(wheels[0]), str(sdists[0])],
         cwd=ROOT,
     ))
+
+    required_source_files = {
+        "README.md",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        "LICENSE",
+        "docs/release-process.md",
+        "docs/report-schema-v1.schema.json",
+        "docs/stateful-http-sequence-v1.schema.json",
+        "docs/stateful-regression-pack-v1.schema.json",
+        "benchmarks/README.md",
+        "benchmarks/stateful-corpus-v2/manifest.json",
+        "examples/README.md",
+        "tests/test_stateful_http.py",
+        "scripts/verify_distribution.py",
+    }
+    if sdists[0].name.endswith((".tar.gz", ".tgz")):
+        with tarfile.open(sdists[0], "r:gz") as archive:
+            source_members = {member.name.replace("\\\\", "/") for member in archive.getmembers() if member.isfile()}
+    elif sdists[0].suffix == ".zip":
+        with zipfile.ZipFile(sdists[0]) as archive:
+            source_members = {name.replace("\\\\", "/") for name in archive.namelist() if not name.endswith("/")}
+    else:
+        raise RuntimeError(f"unsupported source archive format: {sdists[0].name}")
+    missing_source_files = sorted(
+        required for required in required_source_files
+        if not any(name == required or name.endswith("/" + required) for name in source_members)
+    )
+    if missing_source_files:
+        raise RuntimeError(
+            "source archive is missing required project files: " + ", ".join(missing_source_files)
+        )
+    print(f"Source archive contains all {len(required_source_files)} required docs, schemas, tests and fixtures.")
 
     with tempfile.TemporaryDirectory(prefix="twincheck-wheel-check-") as temporary:
         temp_path = Path(temporary)
