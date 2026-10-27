@@ -57,11 +57,45 @@ def load_sequence(path: str | Path) -> tuple[dict[str, Any], str]:
     return decoded, digest
 
 
+def _validate_reset_health_contract(health: Any) -> None:
+    """Validate a read-only, value-pinned post-reset state assertion contract."""
+    if not isinstance(health, dict) or set(health) != {"schema_version", "method", "path", "assertions"}:
+        raise ValueError("reset health contract must contain schema_version, method, path, and assertions")
+    if type(health.get("schema_version")) is not int or health["schema_version"] != 1:
+        raise ValueError("reset health schema_version must be integer 1")
+    if health.get("method") != "GET":
+        raise ValueError("reset health method must be GET so verification cannot mutate target state")
+    path = health.get("path")
+    if not isinstance(path, str) or _TEMPLATE_RE.search(path) or "{{" in path or "}}" in path:
+        raise ValueError("reset health path must be a string without template expressions")
+    _validate_request_path(path, index=0, allow_templates=False)
+    assertions = health.get("assertions")
+    if not isinstance(assertions, list) or not 1 <= len(assertions) <= 32:
+        raise ValueError("reset health assertions must contain between 1 and 32 checks")
+    seen_pointers: set[str] = set()
+    for index, assertion in enumerate(assertions, start=1):
+        if not isinstance(assertion, dict) or set(assertion) != {"pointer", "equals"}:
+            raise ValueError(f"reset health assertion {index} must contain only pointer and equals")
+        pointer = assertion.get("pointer")
+        if not isinstance(pointer, str) or not pointer.startswith("/") or pointer == "/" or re.search(r"~(?![01])", pointer):
+            raise ValueError(f"reset health assertion {index} must use a valid non-root JSON Pointer")
+        if pointer in seen_pointers:
+            raise ValueError(f"duplicate reset health assertion pointer {pointer!r}")
+        seen_pointers.add(pointer)
+        expected = assertion.get("equals")
+        if isinstance(expected, (dict, list)) or not (expected is None or type(expected) in {str, int, float, bool}):
+            raise ValueError(f"reset health assertion {index} equals value must be a scalar JSON value")
+        try:
+            json.dumps(expected, ensure_ascii=False, allow_nan=False)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"reset health assertion {index} equals value must be valid JSON") from exc
+
+
 def validate_sequence(sequence: Any) -> None:
-    """Strictly validate the portable workflow format before any requests run."""
+    """Strictly validate a stateful HTTP workflow and its optional metadata."""
     if not isinstance(sequence, dict):
         raise ValueError("stateful sequence must be a JSON object")
-    allowed_root = {"schema_version", "name", "steps"}
+    allowed_root = {"schema_version", "name", "steps", "health"}
     unknown = set(sequence) - allowed_root
     if unknown:
         raise ValueError(f"unknown stateful sequence key(s): {', '.join(sorted(unknown))}")
@@ -78,10 +112,11 @@ def validate_sequence(sequence: Any) -> None:
         raise ValueError(f"stateful sequence may contain at most {_MAX_SEQUENCE_STEPS} steps")
     total_body_bytes = 0
     seen_step_names: set[str] = set()
+    explicitly_named_steps: set[str] = set()
     for index, step in enumerate(steps, start=1):
         if not isinstance(step, dict):
             raise ValueError(f"sequence step {index} must be an object")
-        unknown_step_keys = set(step) - {"name", "method", "path", "body", "capture"}
+        unknown_step_keys = set(step) - {"name", "method", "path", "body", "capture", "depends_on"}
         if unknown_step_keys:
             raise ValueError(f"unknown key(s) in sequence step {index}: {', '.join(sorted(unknown_step_keys))}")
         step_name = step.get("name", f"step-{index}")
@@ -89,6 +124,20 @@ def validate_sequence(sequence: Any) -> None:
             raise ValueError(f"sequence step {index} name must be a non-empty string")
         if step_name in seen_step_names:
             raise ValueError(f"duplicate sequence step name {step_name!r}")
+        dependencies = step.get("depends_on", [])
+        if not isinstance(dependencies, list) or len(dependencies) > _MAX_SEQUENCE_STEPS:
+            raise ValueError(f"sequence step {index} depends_on must be a bounded array of earlier step names")
+        if any(not isinstance(dependency, str) for dependency in dependencies):
+            raise ValueError(f"sequence step {index} has an invalid dependency name")
+        if len(set(dependencies)) != len(dependencies):
+            raise ValueError(f"sequence step {index} depends_on contains duplicate names")
+        for dependency in dependencies:
+            if not dependency.strip() or len(dependency) > 120:
+                raise ValueError(f"sequence step {index} has an invalid dependency name")
+            if dependency not in seen_step_names or dependency not in explicitly_named_steps:
+                raise ValueError(f"sequence step {index} dependency {dependency!r} must name an explicitly named earlier step")
+        if "name" in step:
+            explicitly_named_steps.add(step_name)
         seen_step_names.add(step_name)
         method = step.get("method")
         if not isinstance(method, str) or method.upper() not in _ALLOWED_METHODS:
@@ -116,6 +165,8 @@ def validate_sequence(sequence: Any) -> None:
                 raise ValueError(f"capture {variable!r} in step {index} has invalid JSON Pointer escaping")
     if total_body_bytes > _MAX_SEQUENCE_BODY_BYTES:
         raise ValueError("combined sequence request bodies exceed 10 MiB")
+    if "health" in sequence:
+        _validate_reset_health_contract(sequence["health"])
 
 
 def _validate_request_path(path: str, *, index: int, allow_templates: bool) -> None:
@@ -334,6 +385,59 @@ def _one_sequence_run(
     return {"step_results": traces, "differences": list(dict.fromkeys(sequence_differences))}
 
 
+def _verify_reset_health(
+    *,
+    health: Mapping[str, Any],
+    reference_url: str,
+    candidate_url: str,
+    timeout: float,
+    max_output_bytes: int,
+    request_headers: tuple[tuple[str, str], ...],
+    response_headers: tuple[str, ...],
+) -> dict[str, Any]:
+    """Verify state assertions after reset without retaining observed values."""
+    failures: list[str] = []
+    checks: list[dict[str, Any]] = []
+    for side, base_url in (("reference", reference_url), ("candidate", candidate_url)):
+        target = HttpTarget(base_url, "GET", health["path"], request_headers, response_headers)
+        observation = _read_response(target, None, timeout=timeout, max_output_bytes=max_output_bytes, opener=_make_session_opener())
+        envelope: Any = None
+        status: int | None = None
+        transport_ok = not observation.timed_out and observation.returncode == 0
+        if transport_ok:
+            try:
+                envelope = json.loads(observation.stdout)
+                candidate_status = envelope.get("status") if isinstance(envelope, dict) else None
+                if type(candidate_status) is int:
+                    status = candidate_status
+            except (json.JSONDecodeError, RecursionError):
+                envelope = None
+        side_check: dict[str, Any] = {"side": side, "status": status, "transport_ok": transport_ok, "passed": False, "assertions": []}
+        if not transport_ok:
+            failures.append(f"{side}: health request transport failed or timed out")
+        elif status is None or not 200 <= status < 300:
+            failures.append(f"{side}: health endpoint did not return 2xx")
+        else:
+            assertion_failed = False
+            for assertion in health["assertions"]:
+                pointer, expected = assertion["pointer"], assertion["equals"]
+                try:
+                    actual = _resolve_pointer(envelope, pointer)
+                    matched = type(actual) is type(expected) and actual == expected
+                except ValueError:
+                    matched = False
+                side_check["assertions"].append({"pointer": pointer, "passed": matched})
+                if not matched:
+                    assertion_failed = True
+                    failures.append(f"{side}: assertion failed at {pointer}")
+            side_check["passed"] = not assertion_failed
+        checks.append(side_check)
+    result = {"verified": not failures, "path": health["path"], "checks": checks}
+    if failures:
+        raise ValueError("reset health check failed; no tested workflow was sent: " + "; ".join(failures[:8]))
+    return result
+
+
 def _validate_sequence_reset(run: Mapping[str, Any]) -> None:
     """Require every reset step to complete with a successful HTTP status on both targets."""
     side_failures: list[str] = []
@@ -514,7 +618,8 @@ def run_http_sequence_comparison(
     options = CompareOptions(timeout=timeout, max_output_bytes=max_output_bytes, contract=contract)
     started = time.perf_counter()
     runs: list[dict[str, Any]] = []
-    for _ in range(repeat):
+    reset_health_runs: list[dict[str, Any]] = []
+    for repeat_index in range(repeat):
         if reset_sequence is not None:
             reset_run = _one_sequence_run(
                 sequence=reset_sequence,
@@ -527,6 +632,17 @@ def run_http_sequence_comparison(
                 options=options,
             )
             _validate_sequence_reset(reset_run)
+            if "health" in reset_sequence:
+                health_result = _verify_reset_health(
+                    health=reset_sequence["health"],
+                    reference_url=reference_base,
+                    candidate_url=candidate_base,
+                    timeout=timeout,
+                    max_output_bytes=max_output_bytes,
+                    request_headers=normalized_headers,
+                    response_headers=normalized_response_headers,
+                )
+                reset_health_runs.append({"repeat_index": repeat_index + 1, **health_result})
         runs.append(
             _one_sequence_run(
                 sequence=sequence,
@@ -648,6 +764,13 @@ def run_http_sequence_comparison(
             "sequence_definition": dict(reset_sequence) if reset_sequence is not None else None,
             "performed_before_each_repeat": reset_sequence is not None,
             "reset_responses_recorded": False,
+            "health_check": {
+                "configured": reset_sequence is not None and "health" in reset_sequence,
+                "verification_mode": ("explicit-json-pointer-assertions" if reset_sequence is not None and "health" in reset_sequence else "status-only" if reset_sequence is not None else "not-configured"),
+                "verified_before_each_repeat": reset_sequence is not None and "health" in reset_sequence and len(reset_health_runs) == repeat,
+                "assertion_pointers": [item["pointer"] for item in reset_sequence["health"]["assertions"]] if reset_sequence is not None and "health" in reset_sequence else [],
+                "runs": reset_health_runs,
+            },
         },
         "http_adapter": {
             "mode": "stateful-sequence",
@@ -681,7 +804,8 @@ def run_http_sequence_comparison(
         },
         "limitations": [
             "Stateful workflows are explicit request sequences; automatic transition exploration requires the explore-http-sequence command.",
-            "When a reset sequence is configured, it must return 2xx responses for every step on both targets before the tested workflow runs; reset response bodies are not retained.",
+            "A reset sequence must return 2xx for every step on both targets. This confirms endpoint success only, not that all hidden state was cleared.",
+            "When the reset sequence embeds a health contract, a separate GET probe checks its JSON Pointer assertions on both targets before every tested repeat; observed health response values are not retained in the health-check summary.",
             "Capture values are scalar JSON values selected by RFC 6901 JSON Pointer from the response observation envelope.",
             "Cookies persist independently within each target sequence and are reset between repeated sequence runs.",
             "Only loopback targets are allowed; this adapter is not a sandbox and request bodies can change local service state.",
