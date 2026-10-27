@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "name": "TwinCheck Exploration Protocol Corpus v1",
+  "description": "Pinned synthetic clean control, scalar drift, stateful transition and paired-field interaction fixtures for matched static/adaptive testing.",
+  "repeat": 1,
+  "timeout_seconds": 3,
+  "max_output_bytes": 100000,
+  "fixture_hashes": {
+    "benchmarks/exploration-corpus-v1.schema.json": "57dca9d54457438ef3546b34ac67588ee6b23aa435ae0a2219fd73aeebf7f1ee",
+    "benchmarks/exploration-corpus-v1/service.py": "1851592711ac9ad10bab039225484c66fd1ae692d7a7a728c6345a7d0b2d243e",
+    "benchmarks/exploration-corpus-v1/sequences/cart-create-add-read-v1.json": "f43c3cbb0874f160e1c9acf2ec93cf4ef808bf9759b8fc63af7cfa628f1910ee",
+    "benchmarks/exploration-corpus-v1/sequences/cart-create-add-read-twice-v1.json": "bab2b3cf5ce7160a68638c40c84b6d16eea62fb9621ebef9fbb0f4f3c5f5dc8a",
+    "benchmarks/exploration-corpus-v1/sequences/reset-v1.json": "86b65c5be4baa59d89f9d06216112b5ed32e18ed5877dac74748fb630acba48e",
+    "benchmarks/exploration-corpus-v1/contracts/cart-compatibility-v1.json": "4604fab2e2e53274244c40f0a1d63708544ba3f47eb70cab27cfd13f5f43e9d3",
+    "docs/stateful-http-sequence-v1.schema.json": "81aaa62faceddcccb0d19e077996c7d6edd52d290be06ee4fd372c1785cc6338",
+    "docs/compatibility-contract-v1.schema.json": "c617e44536bf5d2781077b7083fdb8a839bbb89bedf0e3a49a803ce2864a9bda",
+    "benchmarks/run_exploration_protocol.py": "2fd458c42ea7da86d102c8616597f20027c93f86e4b7c20fcd38f71b47a2c46f"
+  },
+  "cases": [
+    {
+      "id": "clean-control",
+      "sequence": "sequences/cart-create-add-read-v1.json",
+      "reset_sequence": "sequences/reset-v1.json",
+      "contract": "contracts/cart-compatibility-v1.json",
+      "seeds": [
+        19,
+        29,
+        41
+      ],
+      "max_cases": 6,
+      "max_adaptive_candidates": 4,
+      "reference": {},
+      "candidate": {},
+      "expected": {
+        "static": {
+          "finding": false
+        },
+        "adaptive": {
+          "finding": false
+        }
+      }
+    },
+    {
+      "id": "response-value-drift",
+      "sequence": "sequences/cart-create-add-read-v1.json",
+      "reset_sequence": "sequences/reset-v1.json",
+      "contract": "contracts/cart-compatibility-v1.json",
+      "seeds": [
+        19,
+        29,
+        41
+      ],
+      "max_cases": 6,
+      "max_adaptive_candidates": 4,
+      "reference": {},
+      "candidate": {
+        "total_delta": 1
+      },
+      "expected": {
+        "static": {
+          "finding": true,
+          "step_name": "read-cart",
+          "difference_category": "stdout"
+        },
+        "adaptive": {
+          "finding": true,
+          "step_name": "read-cart",
+          "difference_category": "stdout"
+        }
+      }
+    },
+    {
+      "id": "stateful-read-ordering",
+      "sequence": "sequences/cart-create-add-read-twice-v1.json",
+      "reset_sequence": "sequences/reset-v1.json",
+      "contract": "contracts/cart-compatibility-v1.json",
+      "seeds": [
+        19,
+        29,
+        41
+      ],
+      "max_cases": 6,
+      "max_adaptive_candidates": 4,
+      "reference": {},
+      "candidate": {
+        "increment_on_read": true
+      },
+      "expected": {
+        "static": {
+          "finding": true,
+          "step_name": "read-cart-2",
+          "difference_category": "stdout"
+        },
+        "adaptive": {
+          "finding": true,
+          "step_name": "read-cart-2",
+          "difference_category": "stdout"
+        }
+      }
+    },
+    {
+      "id": "compound-pair-interaction",
+      "sequence": "sequences/cart-create-add-read-v1.json",
+      "reset_sequence": "sequences/reset-v1.json",
+      "contract": "contracts/cart-compatibility-v1.json",
+      "seeds": [
+        19
+      ],
+      "max_cases": 2,
+      "max_adaptive_candidates": 1,
+      "reference": {},
+      "candidate": {
+        "compound_defect": true
+      },
+      "expected": {
+        "static": {
+          "finding": false
+        },
+        "adaptive": {
+          "finding": true,
+          "step_name": "add-item",
+          "difference_category": "stdout",
+          "mutation_type": "adaptive_pair_boundary"
+        }
+      }
+    }
+  ],
+  "known_blind_spots": [
+    "Every target is a deterministic in-memory loopback fixture; this protocol does not represent production APIs or external benchmarks.",
+    "The four scenarios exercise one small cart API and do not model concurrency, distributed storage, authentication, database isolation or network failures.",
+    "Only three seeds are used for the first three scenarios; the compound interaction control uses seed 19 because the test is pinned to a known adaptive candidate schedule.",
+    "Elapsed time includes local request scheduling and server lifecycle overhead and is reported for diagnostics, not as a general speed claim.",
+    "Static/adaptive response novelty is not source-code coverage; the protocol checks observed outcomes under finite budgets only."
+  ]
+}
