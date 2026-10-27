@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "name": "cart-stateful-read-ordering",
+  "steps": [
+    {
+      "name": "create-cart",
+      "method": "POST",
+      "path": "/carts",
+      "body": {
+        "currency": "USD"
+      },
+      "capture": {
+        "cart_id": "/body/id"
+      }
+    },
+    {
+      "name": "add-item",
+      "method": "POST",
+      "path": "/carts/{{cart_id}}/items",
+      "body": {
+        "sku": "synthetic-sku",
+        "quantity": 2
+      }
+    },
+    {
+      "name": "read-cart-1",
+      "method": "GET",
+      "path": "/carts/{{cart_id}}"
+    },
+    {
+      "name": "read-cart-2",
+      "method": "GET",
+      "path": "/carts/{{cart_id}}"
+    }
+  ]
+}

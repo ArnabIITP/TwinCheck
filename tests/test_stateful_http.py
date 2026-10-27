@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 from twincheck.cli import main
 from twincheck.contract import contract_from_dict
 from twincheck.stateful_http import (
+    _explain_step_difference,
     load_sequence,
     run_http_sequence_comparison,
     validate_sequence,
@@ -311,6 +312,41 @@ class StatefulHttpTests(unittest.TestCase):
                 if file.is_file()
             )
             self.assertNotIn(secret, pack_text)
+
+    def test_difference_explanation_honors_ignored_sensitive_fields_without_values(self):
+        contract = contract_from_dict({
+            "name": "safe-difference-explanation",
+            "stdout": {"mode": "json", "ignore_paths": ["/body/password"]},
+        })
+        reference = {
+            "returncode": 0,
+            "timed_out": False,
+            "stdout": json.dumps({
+                "status": 200,
+                "headers": {"Content-Type": "application/json"},
+                "body": {"password": "reference-super-secret", "total": 10},
+            }),
+        }
+        candidate = {
+            "returncode": 0,
+            "timed_out": False,
+            "stdout": json.dumps({
+                "status": 200,
+                "headers": {"Content-Type": "application/json"},
+                "body": {"password": "candidate-super-secret", "total": 11},
+            }),
+        }
+        explanation = _explain_step_difference(
+            {"reference": reference, "candidate": candidate},
+            categories=["stdout"],
+            contract=contract,
+        )
+        self.assertEqual(explanation["safe_difference_pointers"], ["/body/total"])
+        self.assertFalse(explanation["values_included"])
+        serialized = json.dumps(explanation)
+        self.assertNotIn("reference-super-secret", serialized)
+        self.assertNotIn("candidate-super-secret", serialized)
+        self.assertNotIn("password", serialized)
 
     def test_variant_generator_covers_boundaries_transitions_and_is_seeded(self):
         sequence = _sequence()

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "name": "volatile-id-control",
+  "steps": [
+    {
+      "name": "create-cart",
+      "method": "POST",
+      "path": "/carts",
+      "body": {
+        "currency": "USD"
+      }
+    }
+  ]
+}

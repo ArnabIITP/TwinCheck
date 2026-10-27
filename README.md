@@ -446,7 +446,7 @@ See [Threat Model](docs/threat-model.md), [Architecture](docs/architecture.md), 
 
 ## Project direction
 
-TwinCheck is being built around one product promise: a compatibility claim should be backed by observable executions, a clearly stated comparison policy, and a counterexample another developer can reproduce. Its differentiator should be evidence quality and a dependable regression workflow, not the number of mutation operators. The current development branch strengthens reset verification and workflow dependency semantics, and adds a small versioned synthetic corpus. Instrumented feedback, broad external benchmarks, additional adapters, and any isolation backend remain separate research projects, not claims of current capability. See the [project plan](docs/project-plan.md) and [roadmap](docs/roadmap.md).
+TwinCheck is being built around one product promise: a compatibility claim should be backed by observable executions, a clearly stated comparison policy, and a counterexample another developer can reproduce. Its differentiator should be evidence quality and a dependable regression workflow, not the number of mutation operators. The v0.9 development milestone adds a hash-pinned corpus covering a clean control, response-value drift, stateful read ordering, idempotency/retry behavior and reset-guard failures. A single verifier validates schemas, runs the cases, checks minimization, exports/replays a regression pack and detects tampering. Instrumented feedback, broad external benchmarks, additional adapters and any isolation backend remain separate research projects, not claims of current capability. See the [project plan](docs/project-plan.md) and [roadmap](docs/roadmap.md).
 
 ### Roadmap summary
 
@@ -460,16 +460,28 @@ TwinCheck is being built around one product promise: a compatibility claim shoul
 | v0.6 | Response-shape/transition feedback, prioritized candidate queue, JSON body shrinking | Implemented as `0.6.0a1`; response-shape coverage is not instrumented code coverage |
 | v0.7 | Portable stateful HTTP regression packs, integrity checks, pinned reset and contract, CLI replay | Implemented on the preceding development baseline; release status is separate from source control |
 | v0.8 | Reset-health verification, dependency metadata, secret-redaction regression tests, and a reproducible synthetic corpus | Merged as `0.8.0a1` alpha; Python 3.11/3.12/3.13 CI matrix green |
+| v0.9 | Multi-failure stateful corpus, safe difference explanations, schema validation, minimization and pack replay | Implemented on `feat/v0.9-regression-corpus`; Linux/Windows CI validation pending |
 | Later | Isolation and richer observability | Planned, security-sensitive |
 | v1.0 | Stable APIs, benchmark corpus and trusted compatibility workflow | Not yet close to complete |
 
 ## Development
+
+Install the core package and run its tests:
 
 ```bash
 python -m pip install -e .
 python -m unittest discover -s tests -v
 python -m twincheck --help
 ```
+
+To verify the pinned stateful corpus and its JSON Schemas, install the optional test extra and run the end-to-end gate:
+
+```bash
+python -m pip install -e ".[test]"
+python benchmarks/verify_stateful_corpus.py
+```
+
+The verifier creates a new `reports/stateful-corpus-v2/` directory containing synthetic JSON evidence, a minimized workflow and a portable regression pack. Delete that output directory before rerunning, or pass a different path using `--output-dir`. See [the corpus guide](benchmarks/README.md) for case definitions and limitations.
 
 A small end-to-end smoke benchmark is documented under [`benchmarks/`](benchmarks/README.md). Benchmark results must be published with the Python version, operating system, number of cases, rounds, and exact commands. A result from one machine is not a general performance claim.
 

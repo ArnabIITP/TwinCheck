@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "name": "ignore-only-volatile-resource-id",
+  "stdout": {
+    "mode": "json",
+    "ignore_paths": [
+      "/body/id"
+    ]
+  },
+  "stderr": {
+    "mode": "exact"
+  },
+  "compare_exit_code": true,
+  "compare_timeout": true
+}

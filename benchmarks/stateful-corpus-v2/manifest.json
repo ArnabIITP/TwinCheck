@@ -1,0 +1,138 @@
+{
+  "schema_version": 2,
+  "name": "TwinCheck Stateful Regression Corpus v2",
+  "description": "Deterministic synthetic controls and seeded stateful defects. This corpus validates behavior and reproducibility, not throughput or cross-tool superiority.",
+  "seed": 19,
+  "repeat": 1,
+  "timeout_seconds": 3,
+  "max_output_bytes": 100000,
+  "fixture_hashes": {
+    "benchmarks/stateful-corpus-v2.schema.json": "d6f059771717fcc34650130cddac9c76b2ae1070c078de24b795a3235a67fea6",
+    "benchmarks/stateful-corpus-v2/service.py": "5143fe1126594dca0f457ddd881eaa4c8520dd0aebce007c01fd1859587374ce",
+    "benchmarks/stateful-corpus-v2/reset-sequence.json": "aaf1b2ba995a1eabdd11cabef4f0218dbbfe0ca5c3daf210d52ce683e8396f5b",
+    "benchmarks/stateful-corpus-v2/cases/volatile-control.json": "16af6a363c844a5a43979279a3b37c69b0ac5ac9d1ab4345728d61854f515a36",
+    "benchmarks/stateful-corpus-v2/cases/cart-value-drift.json": "64f69b0bf8da00abbb9d7996bf694b8fc78323f5555d01a0f8c1834125091ebf",
+    "benchmarks/stateful-corpus-v2/cases/cart-read-twice.json": "ec450be100e251eac02e995d720cd5c0aff5a9e3b89aeb62bd7c71b1e8a0253f",
+    "benchmarks/stateful-corpus-v2/cases/idempotency-retry.json": "08ca6b2e4113196ba64c1e1dde80f15b5f15057d4626164682f81762676fe6b4",
+    "benchmarks/stateful-corpus-v2/contracts/ignore-volatile-id.json": "37440f1d5030c6a4c6eddcdd97721883478e589a1bcdcc150d05ec61b6a2a041",
+    "docs/stateful-http-sequence-v1.schema.json": "e42fa265f8c666f5991407566bac3d88da236d5719ecf1953202010c866992b4",
+    "docs/compatibility-contract-v1.schema.json": "6ebe31d68549f911957681410daea3228f6bedd5e9edd0851cf36fcff628540a",
+    "docs/report-schema-v1.schema.json": "3917a8b0bfc43f7a8ef216c77df470b20097aa1991688a5b8c068db566b3e42d",
+    "docs/stateful-regression-pack-v1.schema.json": "f385eeccabb90d5ad3e2a53865424077882b05ef8c6066fe252a63cb654b7bd9"
+  },
+  "cases": [
+    {
+      "id": "volatile-id-control",
+      "mode": "compare",
+      "sequence": "cases/volatile-control.json",
+      "contract": "contracts/ignore-volatile-id.json",
+      "reference": {},
+      "candidate": {},
+      "expected": {
+        "outcome": "pass",
+        "difference_categories": []
+      }
+    },
+    {
+      "id": "cart-value-drift",
+      "mode": "compare",
+      "sequence": "cases/cart-value-drift.json",
+      "contract": "contracts/ignore-volatile-id.json",
+      "reset_sequence": "reset-sequence.json",
+      "reference": {},
+      "candidate": {
+        "total_delta": 1
+      },
+      "expected": {
+        "outcome": "finding",
+        "difference_categories": [
+          "stdout"
+        ],
+        "step_name": "read-cart",
+        "safe_difference_pointers": [
+          "/body/total"
+        ]
+      }
+    },
+    {
+      "id": "stateful-read-ordering",
+      "mode": "explore",
+      "sequence": "cases/cart-read-twice.json",
+      "contract": "contracts/ignore-volatile-id.json",
+      "reset_sequence": "reset-sequence.json",
+      "reference": {},
+      "candidate": {
+        "increment_on_read": true
+      },
+      "exploration": {
+        "cases": 12,
+        "minimization_trials": 24,
+        "minimize": true
+      },
+      "expected": {
+        "outcome": "minimized_finding",
+        "difference_categories": [
+          "stdout"
+        ],
+        "step_name": "read-cart-2",
+        "safe_difference_pointers": [
+          "/body/total"
+        ],
+        "maximum_steps_after_minimization": 3
+      }
+    },
+    {
+      "id": "idempotency-retry",
+      "mode": "compare",
+      "sequence": "cases/idempotency-retry.json",
+      "contract": "contracts/ignore-volatile-id.json",
+      "reset_sequence": "reset-sequence.json",
+      "request_headers": [
+        [
+          "Idempotency-Key",
+          "synthetic-secret-v0.9-retry"
+        ]
+      ],
+      "reference": {},
+      "candidate": {
+        "idempotency_defect": true
+      },
+      "expected": {
+        "outcome": "finding",
+        "difference_categories": [
+          "stdout"
+        ],
+        "step_name": "payment-retry",
+        "safe_difference_pointers": [
+          "/body/charge_count",
+          "/body/replayed"
+        ]
+      }
+    },
+    {
+      "id": "stale-reset-guard",
+      "mode": "reset_guard",
+      "sequence": "cases/cart-value-drift.json",
+      "contract": "contracts/ignore-volatile-id.json",
+      "reset_sequence": "reset-sequence.json",
+      "reference": {},
+      "candidate": {
+        "broken_reset": true,
+        "initial_item_quantity": 99
+      },
+      "expected": {
+        "outcome": "reset_guard",
+        "difference_categories": [],
+        "guard_error_contains": "candidate: assertion failed at /body/item_count",
+        "workflow_requests": 0
+      }
+    }
+  ],
+  "known_blind_spots": [
+    "All services are synthetic in-memory loopback fixtures; the corpus does not represent arbitrary real-world APIs.",
+    "The suite exercises one cart model and a toy idempotency-key implementation. It does not cover distributed storage, concurrency races, payment networks, authentication, or database isolation.",
+    "A reset health contract verifies only the declared JSON Pointer assertions and cannot prove unobserved or external state is clean.",
+    "The exploration run uses a bounded seeded candidate pool; response-shape feedback is not source-code coverage.",
+    "Findings and minimized traces establish behavior for these fixtures and settings only. No performance or cross-tool superiority claim is made."
+  ]
+}
