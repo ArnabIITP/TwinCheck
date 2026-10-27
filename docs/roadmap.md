@@ -87,6 +87,15 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Add a fixed-fixture static/adaptive comparison report and run it in Linux/Windows CI
 - [x] Document that adaptive feedback is a bounded heuristic, not learned state-machine coverage
 
+## v0.11 — supported public Python API v1
+
+- [x] Expose a small documented Python facade for core command-line differential comparisons
+- [x] Export the same supported names from twincheck.api and the package root
+- [x] Version the public import contract with API_VERSION and document breaking-change rules
+- [x] Add tests for imports, comparison results, compatibility contract loading and report helpers
+- [x] Smoke-test the installed wheel through the public API in the packaging verifier
+- [x] Include API reference and compatibility tests in the source distribution
+
 ## Release readiness
 
 - [x] Document the alpha compatibility promise and distinguish the CLI, versioned file schemas and internal Python modules
@@ -96,7 +105,7 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Add a manual release-candidate workflow that uploads verified artifacts without publishing them
 - [x] Document the release checklist, source archive inspection and explicit publish approval gate
 - [ ] Publish to PyPI only after separate maintainer approval and a final artifact review
-- [ ] Establish a stable public Python API before promising API compatibility
+- [x] Establish a documented public Python API v1 with explicit compatibility tests
 
 ## Later — research and expansion, not release blockers
 
@@ -109,7 +118,7 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 
 - [ ] Optional container-backed isolation and platform-specific resource limits; security-sensitive
 - [ ] File-system and richer protocol observers with explicit scopes
-- [ ] Stable public Python API and backward-compatible report schema
+- [ ] Extend the public API to stateful HTTP comparison and exploration; separately preserve report-schema compatibility
 - [ ] Independently reviewed benchmark corpus and security boundaries
 
 ## Non-goals
