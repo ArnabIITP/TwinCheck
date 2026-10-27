@@ -12,7 +12,7 @@
     "benchmarks/stateful-corpus-v2/reset-sequence.json": "aaf1b2ba995a1eabdd11cabef4f0218dbbfe0ca5c3daf210d52ce683e8396f5b",
     "benchmarks/stateful-corpus-v2/cases/volatile-control.json": "16af6a363c844a5a43979279a3b37c69b0ac5ac9d1ab4345728d61854f515a36",
     "benchmarks/stateful-corpus-v2/cases/cart-value-drift.json": "64f69b0bf8da00abbb9d7996bf694b8fc78323f5555d01a0f8c1834125091ebf",
-    "benchmarks/stateful-corpus-v2/cases/cart-read-twice.json": "efe04161cc7026a7085d52afab7bbea5a9a44f407ada653c656efb384e2adf82",
+    "benchmarks/stateful-corpus-v2/cases/cart-read-twice.json": "ec450be100e251eac02e995d720cd5c0aff5a9e3b89aeb62bd7c71b1e8a0253f",
     "benchmarks/stateful-corpus-v2/cases/idempotency-retry.json": "08ca6b2e4113196ba64c1e1dde80f15b5f15057d4626164682f81762676fe6b4",
     "benchmarks/stateful-corpus-v2/contracts/ignore-volatile-id.json": "37440f1d5030c6a4c6eddcdd97721883478e589a1bcdcc150d05ec61b6a2a041",
     "docs/stateful-http-sequence-v1.schema.json": "e42fa265f8c666f5991407566bac3d88da236d5719ecf1953202010c866992b4",
