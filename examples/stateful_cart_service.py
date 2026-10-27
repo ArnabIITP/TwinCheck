@@ -32,8 +32,9 @@ class CartHandler(http.server.BaseHTTPRequestHandler):
         raw = self.rfile.read(length) if length else b""
         body = json.loads(raw) if raw else None
         if path == "/__test/reset":
-            self.server.items = []
-            self.server.total_delta = self.server.base_total_delta
+            if not self.server.broken_reset:
+                self.server.items = []
+                self.server.total_delta = self.server.base_total_delta
             self._send(200, {"reset": True})
             return
         if path == "/carts":
@@ -53,7 +54,11 @@ class CartHandler(http.server.BaseHTTPRequestHandler):
         self._send(404, {"error": "not found"})
 
     def do_GET(self) -> None:
-        if urlsplit(self.path).path == f"/carts/{self.server.cart_id}":
+        path = urlsplit(self.path).path
+        if path == "/__test/state":
+            self._send(200, {"item_count": len(self.server.items), "total_delta": self.server.total_delta})
+            return
+        if path == f"/carts/{self.server.cart_id}":
             if not self._has_session():
                 self._send(401, {"error": "missing session"})
                 return
@@ -74,13 +79,16 @@ def main() -> None:
     parser.add_argument("--cart-id", default="reference-cart")
     parser.add_argument("--total-delta", type=int, default=0, help="add this integer to every returned total to simulate an immediate response bug")
     parser.add_argument("--increment-on-read", action="store_true", help="simulate a stateful defect: each cart read increments the next read's total")
+    parser.add_argument("--broken-reset", action="store_true", help="simulate a faulty reset endpoint that returns 200 without clearing state")
+    parser.add_argument("--initial-item-quantity", type=int, help="start with one item so reset health can detect stale state")
     args = parser.parse_args()
     server = http.server.ThreadingHTTPServer(("127.0.0.1", args.port), CartHandler)
     server.cart_id = args.cart_id
     server.base_total_delta = args.total_delta
     server.total_delta = args.total_delta
     server.increment_on_read = args.increment_on_read
-    server.items = []
+    server.broken_reset = args.broken_reset
+    server.items = [] if args.initial_item_quantity is None else [{"quantity": args.initial_item_quantity}]
     print(f"Stateful cart demo listening on http://127.0.0.1:{args.port} (cart id: {args.cart_id})")
     try:
         server.serve_forever()
