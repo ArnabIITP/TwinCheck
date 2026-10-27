@@ -10,12 +10,20 @@ permissions:
 
 jobs:
   tests:
-    name: Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.11"
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -23,9 +31,21 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install project
-        run: python -m pip install --upgrade pip && python -m pip install -e .
+      - name: Install project and schema-validation test extra
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[test]"
       - name: Run tests
         run: python -m unittest discover -s tests -v
       - name: Check CLI help
         run: python -m twincheck --help
+      - name: Verify versioned stateful regression corpus
+        run: python benchmarks/verify_stateful_corpus.py --output-dir "${{ runner.temp }}/twincheck-stateful-corpus-v2"
+      - name: Upload synthetic corpus evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stateful-corpus-v2-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: ${{ runner.temp }}/twincheck-stateful-corpus-v2
+          if-no-files-found: ignore
+          retention-days: 14
