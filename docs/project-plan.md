@@ -1,6 +1,6 @@
 # TwinCheck — Project Plan
 
-**Status:** v0.11.0a1 alpha / local-first differential testing  
+**Status:** v0.12.0a1 alpha / local-first differential testing  
 **Primary goal:** Make behavioral compatibility testing reproducible, practical, and evidence-based.  
 **Initial audience:** Developers replacing libraries or tools, language-runtime implementers, maintainers of ports/forks, and teams migrating parsers or data processors.
 
@@ -103,7 +103,17 @@ Known limits: response-shape fingerprints are not source-code instrumentation; m
 
 Known limits: stateful HTTP comparison and exploration remain CLI-only. The public API returns the existing versioned evidence-report dictionary; report-schema compatibility is governed separately.
 
-### Next — Broader independent validation and interface design
+### v0.12 — Pinned exploration protocol and synthetic corpus (implemented alpha)
+
+- Add a dedicated, schema-validated four-case corpus for clean behavior, output drift, stateful read ordering, and a paired-field interaction.
+- Pin fixture and protocol runner content with SHA-256, and validate the synthetic sequence and contract files.
+- Compare static and adaptive exploration at equal case budgets across fixed seeds, with repeated-schedule checks.
+- Record expected outcomes, paired mode results, run-time diagnostics and redacted schedule fingerprints in machine-readable evidence.
+- Run the protocol across the supported CI matrix without publishing any universal performance claim.
+
+Known limits: the corpus exercises one small in-memory cart API; the paired-field scenario is seeded to a known adaptive schedule. This is protocol validation, not external effectiveness evaluation.
+
+### Next — API expansion and independent review
 
 - Build a broader, independently reviewable synthetic corpus before making external benchmark claims.
 - Extend the public API to stateful HTTP workflows only after defining stable request, result and error types.
@@ -220,9 +230,9 @@ GitHub stars and downloads are useful reach signals but do not substitute for th
 
 ## 12. Immediate next actions
 
-1. Validate the v0.11 API and isolated-wheel smoke test across the full CI matrix before merging.
-2. Build an independently reviewable synthetic corpus with pinned expected outcomes before external performance claims.
-3. Gather maintainer feedback on the API's report and error contracts before exposing stateful HTTP operations.
+1. Keep the API v1 contract and the v0.12 synthetic protocol passing in the full CI matrix.
+2. Seek independent review of the corpus design and its blind spots before extending benchmark claims.
+3. Gather maintainer feedback on API report and error contracts before exposing stateful HTTP operations.
 4. Evaluate isolation and resource-control requirements separately from ordinary correctness features.
 5. Publish only after artifact review and explicit maintainer approval.
 
