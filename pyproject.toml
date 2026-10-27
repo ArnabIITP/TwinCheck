@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "twincheck"
-version = "0.7.0a1"
-description = "Evidence-first differential testing with versioned compatibility contracts."
+version = "0.8.0a1"
+description = "Evidence-first differential testing with verified stateful replay and versioned compatibility contracts."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }

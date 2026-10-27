@@ -248,9 +248,15 @@ The replay requires explicit target origins and never follows redirects. It reus
 
 ### Feedback-guided stateful workflow exploration (v0.6 alpha)
 
-`explore-http-sequence` builds a bounded, seeded set of variants from the base workflow: JSON body value boundaries, adjacent swaps that do not break explicit capture dependencies, removing one step, and repeating one step. Every variant—and every minimization trial—is preceded by a reset workflow that you provide. The reset must return HTTP 2xx for every step on both targets; a failed reset aborts before the test workflow is sent. This gate cannot prove that hidden service state has really been reset, so use an endpoint designed for deterministic test resets.
+`explore-http-sequence` builds a bounded, seeded set of variants from the base workflow: JSON body value boundaries, adjacent swaps that preserve both capture-derived and explicitly declared dependencies, removing one step, and repeating one step. Every variant—and every minimization trial—is preceded by a reset workflow that you provide.
 
-The sample cart service includes `POST /__test/reset`, which clears its in-memory cart items while leaving the configured candidate defect intact. To explore the stateful cart example, start the two services as above and run:
+**Reset status and reset health are different guarantees.** A reset step returning HTTP 2xx proves only that the endpoint reported success. A reset workflow can additionally declare a separate read-only GET health check with scalar JSON Pointer assertions. TwinCheck runs that probe against both targets after reset and before the tested workflow, stopping before the workflow is sent if an assertion fails. The report says whether reset checking was status-only or assertion-verified. A health contract proves only the fields you assert, not that every hidden or external state variable was cleared.
+
+For example, the checked-in `examples/sequences/cart-reset-v1.json` requires `/body/item_count` to equal `0` from `GET /__test/state`. The test service also supports `--broken-reset --initial-item-quantity 99` to demonstrate a reset endpoint that returns 200 but leaves stale state behind.
+
+Named workflow steps may declare `depends_on: ["earlier-step"]`. TwinCheck rejects dependencies on unnamed, missing, duplicated, or later steps. The explorer will not deliberately swap directly dependent adjacent steps, though undeclared application semantics and mutations that remove or repeat operations remain the user's responsibility.
+
+To explore the stateful cart example, start the two services as above and run:
 
 ```bash
 twincheck explore-http-sequence \
@@ -410,7 +416,7 @@ twincheck replay-http-sequence-pack \
   --junit reports/cart-regression-replay.xml
 ```
 
-Replay requires explicit loopback target URLs and a side-effect acknowledgement. Authentication headers must be supplied at replay time; header values are never persisted. A saved reset workflow runs before each repeat and aborts if its steps fail. A successful reset status is not proof that all hidden service state was cleared. The pack format is documented in [`docs/stateful-regression-pack-v1.md`](docs/stateful-regression-pack-v1.md).
+Replay requires explicit loopback target URLs and a side-effect acknowledgement. Authentication headers must be supplied at replay time; header values are never persisted. A saved reset workflow runs before each repeat. When it contains a health contract, TwinCheck verifies its assertions before replay continues; otherwise, only reset-step status is checked. Even assertion-verified resets establish only the declared postconditions. The pack format is documented in [`docs/stateful-regression-pack-v1.md`](docs/stateful-regression-pack-v1.md).
 
 ## Reports and exit codes
 
@@ -440,7 +446,7 @@ See [Threat Model](docs/threat-model.md), [Architecture](docs/architecture.md), 
 
 ## Project direction
 
-TwinCheck is not trying to be a generic wrapper around an LLM. Its long-term hypothesis is that compatibility investigations become more useful when every claim is backed by reproducible executions and a portable counterexample. The current alpha includes feedback-guided stateful workflow exploration and portable stateful regression packs. Areas for future work are sequenced in the [project plan](docs/project-plan.md) and [roadmap](docs/roadmap.md): stronger reset verification, dependency-aware sequences, instrumented feedback, more representative benchmarks, adapters beyond HTTP, and an independently reviewed isolation backend.
+TwinCheck is being built around one product promise: a compatibility claim should be backed by observable executions, a clearly stated comparison policy, and a counterexample another developer can reproduce. Its differentiator should be evidence quality and a dependable regression workflow, not the number of mutation operators. The current development branch strengthens reset verification and workflow dependency semantics, and adds a small versioned synthetic corpus. Instrumented feedback, broad external benchmarks, additional adapters, and any isolation backend remain separate research projects, not claims of current capability. See the [project plan](docs/project-plan.md) and [roadmap](docs/roadmap.md).
 
 ### Roadmap summary
 
@@ -452,8 +458,8 @@ TwinCheck is not trying to be a generic wrapper around an LLM. Its long-term hyp
 | v0.4 | Stateful request sequences, capture/reuse, session handling and replay | Implemented |
 | v0.5 | Reset-backed workflow mutations and bounded step minimization | Implemented as `0.5.0a1` |
 | v0.6 | Response-shape/transition feedback, prioritized candidate queue, JSON body shrinking | Implemented as `0.6.0a1`; response-shape coverage is not instrumented code coverage |
-| v0.7 | Portable stateful HTTP regression packs, integrity checks, pinned reset and contract, CLI replay | Implemented locally as `0.7.0a1`; remote publication and full CI matrix still pending |
-| v0.8 | Reset-health verification, dependency metadata, adaptive mutations and benchmark corpus | Planned |
+| v0.7 | Portable stateful HTTP regression packs, integrity checks, pinned reset and contract, CLI replay | Implemented on the preceding development baseline; release status is separate from source control |
+| v0.8 | Reset-health verification, dependency metadata, secret-redaction regression tests, and a reproducible synthetic corpus | Implemented on `feat/v0.8-reliability`; CI and review pending before merge |
 | Later | Isolation and richer observability | Planned, security-sensitive |
 | v1.0 | Stable APIs, benchmark corpus and trusted compatibility workflow | Not yet close to complete |
 

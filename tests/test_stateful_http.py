@@ -16,6 +16,7 @@ from twincheck.stateful_http import (
     run_http_sequence_comparison,
     validate_sequence,
 )
+from twincheck.stateful_packs import export_stateful_sequence_pack
 from twincheck.stateful_explore import (
     _select_next_variant,
     _variant_mutation_features,
@@ -44,8 +45,9 @@ class _CartHandler(http.server.BaseHTTPRequestHandler):
         raw = self.rfile.read(length) if length else b""
         body = json.loads(raw) if raw else None
         if path == "/__test/reset":
-            self.server.items = []
-            self.server.total_delta = self.server.base_total_delta
+            if not self.server.ignore_reset:
+                self.server.items = []
+                self.server.total_delta = self.server.base_total_delta
             self._send(200, {"reset": True})
             return
         if path == "/carts":
@@ -68,6 +70,9 @@ class _CartHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlsplit(self.path).path
+        if path == "/__test/state":
+            self._send(200, {"item_count": len(self.server.items), "total_delta": self.server.total_delta})
+            return
         if path == f"/carts/{self.server.cart_id}":
             if not self._cookie_ok():
                 self._send(401, {"error": "missing session"})
@@ -90,6 +95,7 @@ def _start_cart_server(cart_id, delta=0):
     server.total_delta = delta
     server.increment_on_read = False
     server.items = []
+    server.ignore_reset = False
     server.cookie_protected_step_seen = False
     server.increment_on_get = False
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -197,9 +203,12 @@ class StatefulHttpTests(unittest.TestCase):
 
     def test_reset_sequence_runs_before_each_workflow_and_rejects_failed_reset(self):
         sequence = _sequence()
-        reset_sequence = {"schema_version": 1, "name": "reset", "steps": [
-            {"name": "reset-state", "method": "POST", "path": "/__test/reset"}
-        ]}
+        reset_sequence = {
+            "schema_version": 1, "name": "reset",
+            "steps": [{"name": "reset-state", "method": "POST", "path": "/__test/reset"}],
+            "health": {"schema_version": 1, "method": "GET", "path": "/__test/state",
+                       "assertions": [{"pointer": "/body/item_count", "equals": 0}]},
+        }
         digest = hashlib.sha256(json.dumps(sequence, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         reset_digest = hashlib.sha256(json.dumps(reset_sequence, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         self.reference.items = [{"quantity": 100}]
@@ -213,6 +222,9 @@ class StatefulHttpTests(unittest.TestCase):
         )
         self.assertEqual(report["summary"]["differences_found"], 0)
         self.assertEqual(report["state_reset"]["sequence_sha256"], reset_digest)
+        self.assertTrue(report["state_reset"]["health_check"]["configured"])
+        self.assertTrue(report["state_reset"]["health_check"]["verified_before_each_repeat"])
+        self.assertEqual(report["state_reset"]["health_check"]["runs"][0]["checks"][0]["assertions"][0]["pointer"], "/body/item_count")
         bad_reset = {"schema_version": 1, "name": "bad-reset", "steps": [
             {"name": "reset-fails", "method": "POST", "path": "/not-a-reset-endpoint"}
         ]}
@@ -224,6 +236,81 @@ class StatefulHttpTests(unittest.TestCase):
                 reset_sequence=bad_reset,
                 contract=_contract(),
             )
+
+    def test_200_reset_response_with_stale_state_fails_health_check_before_workflow(self):
+        self.reference.items = [{"quantity": 99}]
+        self.candidate.items = [{"quantity": 77}]
+        self.candidate.ignore_reset = True
+        sequence = _sequence()
+        digest = hashlib.sha256(json.dumps(sequence, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        reset_sequence = {
+            "schema_version": 1, "name": "reset-with-health",
+            "steps": [{"name": "reset-state", "method": "POST", "path": "/__test/reset"}],
+            "health": {"schema_version": 1, "method": "GET", "path": "/__test/state",
+                       "assertions": [{"pointer": "/body/item_count", "equals": 0}]},
+        }
+        reset_digest = hashlib.sha256(json.dumps(reset_sequence, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        with self.assertRaisesRegex(ValueError, "reset health check failed.*candidate.*item_count"):
+            run_http_sequence_comparison(
+                reference_url=f"http://127.0.0.1:{self.reference.server_port}",
+                candidate_url=f"http://127.0.0.1:{self.candidate.server_port}",
+                sequence=sequence, sequence_sha256=digest,
+                reset_sequence=reset_sequence, reset_sequence_sha256=reset_digest,
+                contract=_contract(),
+            )
+        self.assertEqual(len(self.candidate.items), 1)
+
+    def test_sequence_dependencies_must_reference_explicit_earlier_steps(self):
+        valid = {"schema_version": 1, "name": "deps", "steps": [
+            {"name": "create", "method": "POST", "path": "/carts"},
+            {"name": "add", "method": "POST", "path": "/carts", "depends_on": ["create"]},
+        ]}
+        validate_sequence(valid)
+        invalid = {"schema_version": 1, "name": "bad-order", "steps": [
+            {"name": "add", "method": "POST", "path": "/carts", "depends_on": ["create"]},
+            {"name": "create", "method": "POST", "path": "/carts"},
+        ]}
+        with self.assertRaisesRegex(ValueError, "explicitly named earlier step"):
+            validate_sequence(invalid)
+
+    def test_header_secret_is_absent_from_report_and_portable_pack(self):
+        secret = "twincheck-test-secret-9172"
+        self.candidate.base_total_delta = 1
+        self.candidate.total_delta = 1
+        sequence = _sequence()
+        source = json.dumps(sequence, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        reset_sequence = {
+            "schema_version": 1, "name": "reset-with-health",
+            "steps": [{"name": "reset-state", "method": "POST", "path": "/__test/reset"}],
+            "health": {"schema_version": 1, "method": "GET", "path": "/__test/state",
+                       "assertions": [{"pointer": "/body/item_count", "equals": 0}]},
+        }
+        reset_source = json.dumps(reset_sequence, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        report = run_http_sequence_comparison(
+            reference_url=f"http://127.0.0.1:{self.reference.server_port}",
+            candidate_url=f"http://127.0.0.1:{self.candidate.server_port}",
+            sequence=sequence,
+            sequence_sha256=hashlib.sha256(source).hexdigest(),
+            reset_sequence=reset_sequence,
+            reset_sequence_sha256=hashlib.sha256(reset_source).hexdigest(),
+            request_headers=(("X-Test-Secret", secret),),
+            contract=_contract(),
+        )
+        self.assertGreater(report["summary"]["differences_found"], 0)
+        self.assertNotIn(secret, json.dumps(report))
+        self.assertIn("x-test-secret", report["http_adapter"]["request_header_names"])
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            report_path = root / "report.json"
+            report_path.write_text(json.dumps(report), encoding="utf-8")
+            pack_path = root / "pack"
+            export_stateful_sequence_pack(report_path, pack_path)
+            pack_text = "".join(
+                file.read_text(encoding="utf-8")
+                for file in pack_path.iterdir()
+                if file.is_file()
+            )
+            self.assertNotIn(secret, pack_text)
 
     def test_variant_generator_covers_boundaries_transitions_and_is_seeded(self):
         sequence = _sequence()

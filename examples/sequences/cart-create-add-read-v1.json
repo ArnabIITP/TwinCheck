@@ -6,19 +6,32 @@
       "name": "create-cart",
       "method": "POST",
       "path": "/carts",
-      "body": { "currency": "USD" },
-      "capture": { "cart_id": "/body/id" }
+      "body": {
+        "currency": "USD"
+      },
+      "capture": {
+        "cart_id": "/body/id"
+      }
     },
     {
       "name": "add-item",
       "method": "POST",
       "path": "/carts/{{cart_id}}/items",
-      "body": { "sku": "demo-sku", "quantity": 2 }
+      "body": {
+        "sku": "demo-sku",
+        "quantity": 2
+      },
+      "depends_on": [
+        "create-cart"
+      ]
     },
     {
       "name": "read-cart",
       "method": "GET",
-      "path": "/carts/{{cart_id}}"
+      "path": "/carts/{{cart_id}}",
+      "depends_on": [
+        "add-item"
+      ]
     }
   ]
 }
