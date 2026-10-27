@@ -68,6 +68,7 @@ def run_comparison(
     input_cases: Sequence[str] | None = None,
     input_source: str | None = None,
     contract: CompatibilityContract | None = None,
+    input_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if cases < 1:
         raise ValueError("cases must be at least 1")
@@ -178,7 +179,7 @@ def run_comparison(
         findings.append(item)
 
     elapsed = time.perf_counter() - started
-    return {
+    report = {
         "schema_version": REPORT_SCHEMA_VERSION,
         "tool": "TwinCheck",
         "tool_version": __version__,
@@ -226,3 +227,6 @@ def run_comparison(
             "Repeated runs detect observable instability but cannot explain or eliminate all nondeterminism.",
         ],
     }
+    if input_metadata is not None:
+        report["input_generation"] = dict(input_metadata)
+    return report

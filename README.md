@@ -4,7 +4,7 @@
 
 ### Differential testing for black-box software compatibility
 
-**Give TwinCheck two implementations. It explores inputs, detects behavioral differences, shrinks stable failures, and exports evidence you can replay in CI.**
+**Give TwinCheck two implementations. It explores structured inputs, detects behavioral differences, and exports evidence you can replay in CI.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ArnabIITP/TwinCheck/ci.yml?branch=main&label=CI)](https://github.com/ArnabIITP/TwinCheck/actions/workflows/ci.yml)
 [![Stars](https://img.shields.io/github/stars/ArnabIITP/TwinCheck?style=social)](https://github.com/ArnabIITP/TwinCheck/stargazers)
@@ -24,22 +24,25 @@ Replacing a parser, porting a tool to another language, implementing a compatibl
 
 TwinCheck is intended to make those differences observable and actionable. Its initial target is a black-box command-line interface, so the reference and candidate may be implemented in different languages. It generates repeatable text inputs, runs both programs, compares their observable output and exit behavior, and records enough information to reproduce a finding.
 
-The longer-term research direction is an **evidence-first compatibility lab**: structured input adapters, instability-aware comparisons, minimized counterexamples, portable regression artifacts, and eventually execution adapters for APIs and stateful protocols. AI-assisted input suggestions may be added later, but a model will never be treated as proof that a difference exists. A finding must be backed by actual executions.
+The longer-term research direction is an **evidence-first compatibility lab**: schema-aware structured inputs, instability-aware comparisons, minimized counterexamples, portable regression artifacts, and execution adapters for local APIs and eventually stateful protocols. AI-assisted input suggestions may be added later, but a model will never be treated as proof that a difference exists. A finding must be backed by actual executions.
 
 ## What is implemented today
 
 | Capability | Current behavior |
 | --- | --- |
-| Deterministic input generation | Mixed, text, integer-boundary and JSON-shaped text strategies; seeded pseudo-random inputs |
+| Deterministic input generation | Mixed, text, integer-boundary and JSON-shaped text strategies, plus seeded JSON Schema-guided samples from a documented subset |
 | Known-corpus support | Reads UTF-8 files from a directory in stable path order, before generated cases |
 | Black-box execution | Runs two commands without invoking a shell; supports stdin or a `{input}` argv placeholder |
+| Local HTTP comparison | Sends the same JSON request body to two loopback HTTP services; compares status, selected headers, and JSON/text body observations |
+| Stateful HTTP workflows | Executes ordered request sequences, preserves independent cookies, captures scalar response values for later steps, and stores replayable per-step evidence |
 | Observable comparison | stdout, stderr, exit code, timeout, output truncation and repeated-run instability |
 | Output policy | Per-stream retained-byte cap; output is redirected to temporary files instead of unbounded in-memory pipes |
 | Compatibility contracts | Versioned JSON contract chooses exact or structural-JSON output comparison, JSON Pointer ignores for volatile fields, and whether exit codes/timeouts matter |
+| Input provenance | Schema-guided reports record the exact schema-file SHA-256, title, seed and unique sample count; sequence reports include source and canonical hashes |
 | Contract provenance | Every report stores the normalized contract and SHA-256 fingerprint so teams can audit exactly which rules produced a result |
 | Failure minimization | Bounded delta-debugging for stable mismatches; explicitly reports the trial budget |
 | Reproduction | JSON reports retain the input and SHA-256 digest; `replay` re-runs a chosen finding with explicitly supplied commands |
-| Counterexample packs | Export findings into a validated portable regression pack that pins the compatibility contract and verifies every case hash before replay |
+| Counterexample packs | Export CLI input findings and stateful HTTP workflows into separate portable packs; pin contracts and hashes before replay |
 | CI output | Human-readable summary, JSON evidence report, and JUnit XML with one testcase per tested input |
 | Project quality | Standard-library tests, GitHub Actions CI, issue templates, MIT license and security/contribution policies |
 
@@ -78,6 +81,9 @@ Run the tests locally:
 python -m unittest discover -s tests -v
 python -m twincheck --help
 python -m twincheck compare --help
+python -m twincheck compare-http --help
+python -m twincheck compare-http-sequence --help
+python -m twincheck replay-http-sequence --help
 python -m twincheck replay --help
 ```
 
@@ -133,6 +139,7 @@ twincheck compare \
 | `--seed N` | Seed for reproducible input generation; default `0` |
 | `--strategy` | `mixed`, `text`, `integer`, or `json` |
 | `--corpus DIR` | Try local UTF-8 corpus files before generated inputs |
+| `--schema PATH` | Generate input JSON from a local JSON Schema (cannot be combined with `--corpus` in this release) |
 | `--timeout SECONDS` | Per-target timeout; default `5` seconds |
 | `--repeat N` | Run each target N times for each input to expose observable instability; default `1` |
 | `--max-output-bytes N` | Retain at most N bytes per stdout/stderr stream; default `1,000,000` |
@@ -151,10 +158,119 @@ twincheck compare \
 
 - **`text`** prioritizes empty input, whitespace, line endings, Unicode, control characters, long strings and random text.
 - **`integer`** prioritizes signed integer boundaries, zero/sign variants and large numeric strings.
-- **`json`** generates JSON-compatible scalars, arrays and nested objects as text. It does not yet validate inputs against a user-provided JSON Schema.
+- **`json`** generates JSON-compatible scalars, arrays and nested objects as text.
+- **`--schema PATH`** generates inputs from a JSON Schema subset and validates generated samples against the implemented constraints before execution. Unsupported validation keywords fail with an explicit error rather than being silently ignored. See [schema generation support](docs/schema-generation.md).
 - **`mixed`** combines the known edge-case families and samples from each generator.
 
 Known edge cases are attempted first. Generated values are deterministic for a given TwinCheck version, strategy, requested count and seed. Reproducibility across different future versions is not guaranteed unless the version is pinned.
+
+### Generate inputs from JSON Schema
+
+```bash
+twincheck compare \
+  --reference "python reference.py" \
+  --candidate "python replacement.py" \
+  --schema examples/schemas/quote-request-v1.json \
+  --cases 200 \
+  --seed 42 \
+  --contract examples/contracts/json-api-v1.json \
+  --output reports/schema-compatibility.json
+```
+
+The schema bytes are hashed into the report, and the seed plus unique sample count are recorded. A finite schema such as an enum or `const` may have fewer unique values than requested, so check `cases_executed` rather than assuming every requested case ran. For this increment, `--schema` and `--corpus` are mutually exclusive. The supported subset and current limits are documented in [`docs/schema-generation.md`](docs/schema-generation.md).
+
+### Compare two local HTTP implementations
+
+Start the included example service twice in separate terminals:
+
+```bash
+python examples/http_service.py --port 8001 --delta 0
+python examples/http_service.py --port 8002 --delta 1
+```
+
+Then exercise both implementations using the same generated request bodies:
+
+```bash
+twincheck compare-http \
+  --reference-url http://127.0.0.1:8001 \
+  --candidate-url http://127.0.0.1:8002 \
+  --path /quotes \
+  --method POST \
+  --schema examples/schemas/quote-request-v1.json \
+  --contract examples/contracts/http-api-v1.json \
+  --cases 25 \
+  --seed 42 \
+  --output reports/http-compatibility.json \
+  --junit reports/http-compatibility.xml
+```
+
+This demo should find a difference because the candidate adds one to every calculated total. Set both `--delta` values to `0` for the compatible case. HTTP mode only targets `localhost`, `127.0.0.1`, or `::1`; it sends one JSON body to a fixed path and does not follow a multi-step workflow. By default it compares status, `content-type`, and the response body. Add `--response-header NAME` for each additional response header to compare. Add `--header 'Name: value'` for request headers; header values are not written to reports. Do not include secrets in the generated body or API response.
+
+The adapter is intended for local test services, not internet services, scanning, or isolation. It does not automatically start or sandbox target services.
+
+### Compare multi-step, stateful API workflows
+
+A single-request comparison can miss regressions that only appear after an API creates a resource, establishes a session, mutates that resource, and reads it back. `compare-http-sequence` executes the same user-authored workflow against each implementation. Cookies persist within each workflow, with independent cookie jars for reference and candidate. A response can capture scalar values by JSON Pointer and use them in later paths or JSON bodies.
+
+Start the included stateful demo in two terminals:
+
+```bash
+python examples/stateful_cart_service.py --port 8001 --cart-id reference-cart
+python examples/stateful_cart_service.py --port 8002 --cart-id candidate-cart --total-delta 1
+```
+
+Then run the workflow:
+
+```bash
+twincheck compare-http-sequence \
+  --reference-url http://127.0.0.1:8001 \
+  --candidate-url http://127.0.0.1:8002 \
+  --sequence examples/sequences/cart-create-add-read-v1.json \
+  --contract examples/contracts/stateful-cart-v1.json \
+  --output reports/cart-workflow.json \
+  --junit reports/cart-workflow.xml
+```
+
+The workflow captures `/body/id` from `create-cart` as `cart_id`, then substitutes `{{cart_id}}` in the add/read paths. The two services return different IDs, but the contract ignores that field while still comparing the final total. With `--total-delta 1`, the difference appears only on the final `read-cart` step.
+
+The report includes the original sequence definition, its exact source-file SHA-256 and a canonical JSON hash, each step's observations, difference categories and request-body hashes. To replay the recorded sequence after a fix, use the report as input and explicitly acknowledge that the requests may alter service state:
+
+```bash
+twincheck replay-http-sequence \
+  --report reports/cart-workflow.json \
+  --reference-url http://127.0.0.1:8001 \
+  --candidate-url http://127.0.0.1:8002 \
+  --allow-side-effects \
+  --output reports/cart-workflow-replay.json
+```
+
+The replay requires explicit target origins and never follows redirects. It reuses the compatibility contract pinned in the evidence report. The sequence definition and response observations are stored in a finding, so do not run workflows containing secrets or real customer data. See [`docs/stateful-http-sequence-v1.schema.json`](docs/stateful-http-sequence-v1.schema.json) for the sequence format.
+
+### Feedback-guided stateful workflow exploration (v0.6 alpha)
+
+`explore-http-sequence` builds a bounded, seeded set of variants from the base workflow: JSON body value boundaries, adjacent swaps that do not break explicit capture dependencies, removing one step, and repeating one step. Every variant—and every minimization trial—is preceded by a reset workflow that you provide. The reset must return HTTP 2xx for every step on both targets; a failed reset aborts before the test workflow is sent. This gate cannot prove that hidden service state has really been reset, so use an endpoint designed for deterministic test resets.
+
+The sample cart service includes `POST /__test/reset`, which clears its in-memory cart items while leaving the configured candidate defect intact. To explore the stateful cart example, start the two services as above and run:
+
+```bash
+twincheck explore-http-sequence \
+  --reference-url http://127.0.0.1:8001 \
+  --candidate-url http://127.0.0.1:8002 \
+  --sequence examples/sequences/cart-create-add-read-v1.json \
+  --reset-sequence examples/sequences/cart-reset-v1.json \
+  --contract examples/contracts/stateful-cart-v1.json \
+  --allow-side-effects \
+  --cases 40 \
+  --seed 42 \
+  --minimize \
+  --max-minimization-trials 30 \
+  --output reports/cart-exploration.json \
+  --junit reports/cart-exploration.xml
+```
+
+The side-effect acknowledgement is mandatory because exploration sends many requests and may repeat state-changing steps. Reports record mutation type and description, priority scores and reasons, newly covered response branches/transitions, the base/reset workflow hashes, and any minimized workflow. Coverage signatures are hashes of response behavior categories, not actual field values. Findings can be passed to `replay-http-sequence`; the pinned reset definition is verified and reused by default. You may also use `--reset-sequence` with `compare-http-sequence` to reset before each repeat. Workflow definitions and failure traces can contain sensitive request/response values; use only synthetic fixtures.
+
+Minimization first removes steps, then tries deleting request-body fields/items and simplifying scalar JSON values while preserving the selected mismatch at the same named step. Exploration remains deliberately bounded: the feedback scheduler ranks a pre-generated mutation pool rather than synthesizing arbitrary new mutations from runtime behavior, and its response-shape signatures are not source-code branch coverage. It is not a general state-machine learner. See [`docs/roadmap.md`](docs/roadmap.md) for remaining work.
 
 ### Pass input through stdin or argv
 
@@ -275,6 +391,27 @@ twincheck replay-pack \
 
 A clean replay exits `0`; a reproduced mismatch exits `1`, making the pack useful as a compatibility gate. Commit packs only when their inputs are safe to share—counterexamples can contain secrets, proprietary data, or personally identifiable information. The pack manifest format is described in [`docs/counterexample-pack-v1.schema.json`](docs/counterexample-pack-v1.schema.json).
 
+For stateful HTTP findings, v0.7 adds a separate sequence pack format. It preserves the workflow, optional reset workflow, hashes, and compatibility contract, but intentionally excludes response traces and request-header values. This lets teams commit a regression definition without copying sensitive response observations into the pack.
+
+```bash
+# Package one stateful finding.
+twincheck export-http-sequence-pack \
+  --report reports/cart-exploration.json \
+  --finding 1 \
+  --output tests/stateful-regressions/cart-total
+
+# Replay after a fix against local test services.
+twincheck replay-http-sequence-pack \
+  --pack tests/stateful-regressions/cart-total \
+  --reference-url http://127.0.0.1:8001 \
+  --candidate-url http://127.0.0.1:8002 \
+  --allow-side-effects \
+  --output reports/cart-regression-replay.json \
+  --junit reports/cart-regression-replay.xml
+```
+
+Replay requires explicit loopback target URLs and a side-effect acknowledgement. Authentication headers must be supplied at replay time; header values are never persisted. A saved reset workflow runs before each repeat and aborts if its steps fail. A successful reset status is not proof that all hidden service state was cleared. The pack format is documented in [`docs/stateful-regression-pack-v1.md`](docs/stateful-regression-pack-v1.md).
+
 ## Reports and exit codes
 
 Each JSON report contains metadata, a per-case execution index with input SHA-256 and difference categories, detailed findings with exact input and process observations, timing, generator configuration, and limitations. `docs/report-schema-v1.schema.json` describes report schema v1.2; the compatibility rules have their own independently versioned contract schema. The schema is versioned because reports are intended to become portable regression artifacts.
@@ -303,7 +440,7 @@ See [Threat Model](docs/threat-model.md), [Architecture](docs/architecture.md), 
 
 ## Project direction
 
-TwinCheck is not trying to be a generic wrapper around an LLM. Its long-term hypothesis is that compatibility investigations become more useful when every claim is backed by reproducible executions and a portable counterexample. Areas for future work are sequenced in the [project plan](docs/project-plan.md) and [roadmap](docs/roadmap.md): schema-aware generation, richer normalized traces, API/protocol adapters, regression bundles, and an independently reviewed isolated-execution backend.
+TwinCheck is not trying to be a generic wrapper around an LLM. Its long-term hypothesis is that compatibility investigations become more useful when every claim is backed by reproducible executions and a portable counterexample. The current alpha includes feedback-guided stateful workflow exploration and portable stateful regression packs. Areas for future work are sequenced in the [project plan](docs/project-plan.md) and [roadmap](docs/roadmap.md): stronger reset verification, dependency-aware sequences, instrumented feedback, more representative benchmarks, adapters beyond HTTP, and an independently reviewed isolation backend.
 
 ### Roadmap summary
 
@@ -311,8 +448,13 @@ TwinCheck is not trying to be a generic wrapper around an LLM. Its long-term hyp
 | --- | --- | --- |
 | v0.1 | Deterministic CLI differential testing, minimization, JSON report, tests and CI | Prototype implemented |
 | v0.2 | Replay, JUnit output, repeated-run instability detection, bounded capture, versioned semantic output contracts, and contract-pinned regression packs | Implemented in the current development branch; needs broader cross-platform CI validation |
-| v0.3 | JSON Schema-aware input generation and adapter interface for request/response compatibility | Planned |
-| v0.4 | Isolated execution and richer filesystem/network observations | Planned, security-sensitive |
+| v0.3 | JSON Schema-aware input generation and local HTTP request/response comparison | Implemented as documented-subset alpha features |
+| v0.4 | Stateful request sequences, capture/reuse, session handling and replay | Implemented |
+| v0.5 | Reset-backed workflow mutations and bounded step minimization | Implemented as `0.5.0a1` |
+| v0.6 | Response-shape/transition feedback, prioritized candidate queue, JSON body shrinking | Implemented as `0.6.0a1`; response-shape coverage is not instrumented code coverage |
+| v0.7 | Portable stateful HTTP regression packs, integrity checks, pinned reset and contract, CLI replay | Implemented locally as `0.7.0a1`; remote publication and full CI matrix still pending |
+| v0.8 | Reset-health verification, dependency metadata, adaptive mutations and benchmark corpus | Planned |
+| Later | Isolation and richer observability | Planned, security-sensitive |
 | v1.0 | Stable APIs, benchmark corpus and trusted compatibility workflow | Not yet close to complete |
 
 ## Development

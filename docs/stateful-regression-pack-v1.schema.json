@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ArnabIITP/TwinCheck/blob/main/docs/stateful-regression-pack-v1.schema.json",
+  "title": "TwinCheck Stateful HTTP Regression Pack Manifest v1",
+  "description": "Integrity and provenance manifest for a portable stateful HTTP sequence regression pack.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "tool",
+    "pack_type",
+    "source_tool_version",
+    "source_report_sha256",
+    "source_input_source",
+    "source_finding_number",
+    "source_differences",
+    "sequence_file",
+    "sequence_file_sha256",
+    "sequence_source_sha256",
+    "sequence_canonical_sha256",
+    "contract_file",
+    "contract_sha256",
+    "reset_enabled"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "tool": {
+      "const": "TwinCheck"
+    },
+    "pack_type": {
+      "const": "stateful-http-regression-pack"
+    },
+    "source_tool_version": {
+      "type": "string"
+    },
+    "source_report_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_input_source": {
+      "enum": [
+        "stateful-http-sequence",
+        "stateful-http-exploration"
+      ]
+    },
+    "source_finding_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source_differences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sequence_file": {
+      "const": "sequence.json"
+    },
+    "sequence_file_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "sequence_source_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "sequence_canonical_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "contract_file": {
+      "const": "contract.json"
+    },
+    "contract_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "reset_enabled": {
+      "type": "boolean"
+    },
+    "reset_sequence_file": {
+      "const": "reset-sequence.json"
+    },
+    "reset_sequence_file_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "reset_sequence_source_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "reset_sequence_canonical_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "reset_enabled": {
+            "const": true
+          }
+        },
+        "required": [
+          "reset_enabled"
+        ]
+      },
+      "then": {
+        "required": [
+          "reset_sequence_file",
+          "reset_sequence_file_sha256",
+          "reset_sequence_source_sha256",
+          "reset_sequence_canonical_sha256"
+        ]
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "reset_sequence_file"
+              ]
+            },
+            {
+              "required": [
+                "reset_sequence_file_sha256"
+              ]
+            },
+            {
+              "required": [
+                "reset_sequence_source_sha256"
+              ]
+            },
+            {
+              "required": [
+                "reset_sequence_canonical_sha256"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

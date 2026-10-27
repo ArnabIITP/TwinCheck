@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "name": "reset-cart-state",
+  "steps": [
+    {
+      "name": "reset",
+      "method": "POST",
+      "path": "/__test/reset"
+    }
+  ]
+}
