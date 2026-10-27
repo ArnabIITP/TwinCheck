@@ -14,7 +14,7 @@
     "benchmarks/exploration-corpus-v1/contracts/cart-compatibility-v1.json": "4604fab2e2e53274244c40f0a1d63708544ba3f47eb70cab27cfd13f5f43e9d3",
     "docs/stateful-http-sequence-v1.schema.json": "81aaa62faceddcccb0d19e077996c7d6edd52d290be06ee4fd372c1785cc6338",
     "docs/compatibility-contract-v1.schema.json": "c617e44536bf5d2781077b7083fdb8a839bbb89bedf0e3a49a803ce2864a9bda",
-    "benchmarks/run_exploration_protocol.py": "2fd458c42ea7da86d102c8616597f20027c93f86e4b7c20fcd38f71b47a2c46f"
+    "benchmarks/run_exploration_protocol.py": "aaf3c2ba353b3cdeacd863749ac9d2d0292a7d3c712977e745ee058f9caed324"
   },
   "cases": [
     {
