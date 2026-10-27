@@ -55,10 +55,13 @@ def _canonical_hash(value: Any) -> str:
 
 
 def _checked_corpus_path(relative: str) -> Path:
-    path = (CORPUS / relative).resolve()
+    candidate = CORPUS / relative
+    if candidate.is_symlink():
+        raise ProtocolFailure(f"fixture is a symbolic link: {relative}")
+    path = candidate.resolve()
     if not path.is_relative_to(CORPUS.resolve()):
         raise ProtocolFailure(f"fixture path escapes corpus directory: {relative}")
-    if not path.is_file() or path.is_symlink():
+    if not path.is_file():
         raise ProtocolFailure(f"fixture is missing or not a regular file: {relative}")
     return path
 
