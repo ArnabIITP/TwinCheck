@@ -2,7 +2,7 @@
 
 ## Current status
 
-TwinCheck is an early alpha at version 0.11.0a1. The repository has a release-candidate validation workflow, but no PyPI publication is configured or triggered by CI. Successful package validation is not itself a public release.
+TwinCheck is an early alpha at version 0.12.0a1. The repository has a release-candidate validation workflow, but no PyPI publication is configured or triggered by CI. Successful package validation is not itself a public release.
 
 ## What is supported today
 
