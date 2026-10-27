@@ -79,10 +79,10 @@ def main() -> int:
     }
     if sdists[0].name.endswith((".tar.gz", ".tgz")):
         with tarfile.open(sdists[0], "r:gz") as archive:
-            source_members = {member.name.replace("\\\\", "/") for member in archive.getmembers() if member.isfile()}
+            source_members = {member.name for member in archive.getmembers() if member.isfile()}
     elif sdists[0].suffix == ".zip":
         with zipfile.ZipFile(sdists[0]) as archive:
-            source_members = {name.replace("\\\\", "/") for name in archive.namelist() if not name.endswith("/")}
+            source_members = {name for name in archive.namelist() if not name.endswith("/")}
     else:
         raise RuntimeError(f"unsupported source archive format: {sdists[0].name}")
     missing_source_files = sorted(
