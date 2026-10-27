@@ -146,10 +146,13 @@ def _same_steps_digest(sequence: Mapping[str, Any]) -> str:
 def _has_direct_dependency(left: Mapping[str, Any], right: Mapping[str, Any]) -> bool:
     left_produces = set(left.get("capture", {}))
     right_produces = set(right.get("capture", {}))
+    left_name, right_name = left.get("name"), right.get("name")
     return bool(
         left_produces & _variables_used(right)
         or right_produces & _variables_used(left)
         or left_produces & right_produces
+        or (isinstance(right_name, str) and right_name in left.get("depends_on", []))
+        or (isinstance(left_name, str) and left_name in right.get("depends_on", []))
     )
 
 
@@ -860,6 +863,13 @@ def run_http_sequence_exploration(
             "sequence_definition": copy.deepcopy(dict(reset_sequence)),
             "performed_before_each_variant_and_minimization_trial": True,
             "reset_responses_recorded": False,
+            "health_check": {
+                "configured": "health" in reset_sequence,
+                "verification_mode": "explicit-json-pointer-assertions" if "health" in reset_sequence else "status-only",
+                "verified_before_each_variant": "health" in reset_sequence,
+                "verified_before_each_minimization_trial": "health" in reset_sequence,
+                "assertion_pointers": [item["pointer"] for item in reset_sequence["health"]["assertions"]] if "health" in reset_sequence else [],
+            },
         },
         "exploration": {
             "algorithm_version": 2,
