@@ -96,6 +96,16 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Smoke-test the installed wheel through the public API in the packaging verifier
 - [x] Include API reference and compatibility tests in the source distribution
 
+## v0.12 — pinned exploration protocol and synthetic corpus
+
+- [x] Add a separate manifest and schema for a multi-case synthetic exploration corpus
+- [x] Pin fixture, schema and protocol-runner contents with SHA-256 digests
+- [x] Cover clean control, simple output drift, later state-transition drift and a two-field interaction
+- [x] Compare static and adaptive modes under equal per-case execution budgets
+- [x] Record sanitized schedule fingerprints, expected outcomes, paired outcomes, seeds, timing and repeatability
+- [x] Require repeated runs to preserve the same mutation schedule and outcome
+- [x] Run the protocol in the four-job CI matrix and require its files in verified source distributions
+
 ## Release readiness
 
 - [x] Document the alpha compatibility promise and distinguish the CLI, versioned file schemas and internal Python modules
@@ -111,7 +121,7 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 
 - [ ] Design an adapter protocol for optional instrumentation or coverage feedback; first define its trust and reproducibility contract
 - [x] Evaluate observation-driven mutation generation against the fixed seeded candidate pool on a pinned synthetic fixture
-- [ ] Add a broader independently reviewable synthetic corpus before attempting external API benchmarks
+- [x] Add a versioned, independently inspectable first synthetic exploration corpus before attempting external API benchmarks
 - [ ] Consider adapters beyond HTTP only after reset, replay, and reporting guarantees have clear interfaces
 
 ## Later — isolation and stable workflows
@@ -119,7 +129,7 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [ ] Optional container-backed isolation and platform-specific resource limits; security-sensitive
 - [ ] File-system and richer protocol observers with explicit scopes
 - [ ] Extend the public API to stateful HTTP comparison and exploration; separately preserve report-schema compatibility
-- [ ] Independently reviewed benchmark corpus and security boundaries
+- [ ] Independent external review and a broader multi-domain benchmark corpus beyond the current synthetic cart fixture
 
 ## Non-goals
 

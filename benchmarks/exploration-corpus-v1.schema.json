@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://twincheck.local/schemas/exploration-corpus-v1.schema.json",
+  "title": "TwinCheck Exploration Protocol Corpus v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "description",
+    "repeat",
+    "timeout_seconds",
+    "max_output_bytes",
+    "fixture_hashes",
+    "cases",
+    "known_blind_spots"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "repeat": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "timeout_seconds": { "type": "number", "exclusiveMinimum": 0, "maximum": 15 },
+    "max_output_bytes": { "type": "integer", "minimum": 1024, "maximum": 1000000 },
+    "fixture_hashes": {
+      "type": "object",
+      "minProperties": 7,
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sequence",
+          "reset_sequence",
+          "contract",
+          "seeds",
+          "max_cases",
+          "max_adaptive_candidates",
+          "reference",
+          "candidate",
+          "expected"
+        ],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "sequence": { "type": "string", "minLength": 1 },
+          "reset_sequence": { "type": "string", "minLength": 1 },
+          "contract": { "type": "string", "minLength": 1 },
+          "seeds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "integer", "minimum": 0 }
+          },
+          "max_cases": { "type": "integer", "minimum": 2, "maximum": 40 },
+          "max_adaptive_candidates": { "type": "integer", "minimum": 0, "maximum": 40 },
+          "reference": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "total_delta": { "type": "integer" },
+              "increment_on_read": { "type": "boolean" },
+              "compound_defect": { "type": "boolean" }
+            }
+          },
+          "candidate": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "total_delta": { "type": "integer" },
+              "increment_on_read": { "type": "boolean" },
+              "compound_defect": { "type": "boolean" }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["static", "adaptive"],
+            "properties": {
+              "static": { "$ref": "#/$defs/modeExpectation" },
+              "adaptive": { "$ref": "#/$defs/modeExpectation" }
+            }
+          }
+        }
+      }
+    },
+    "known_blind_spots": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "modeExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finding"],
+      "properties": {
+        "finding": { "type": "boolean" },
+        "step_name": { "type": "string" },
+        "mutation_type": { "type": "string" },
+        "difference_category": { "type": "string" }
+      }
+    }
+  }
+}

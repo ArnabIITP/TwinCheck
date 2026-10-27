@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.12.0a1 - Pinned exploration protocol corpus v1 (alpha)
+
+- Add a separate, versioned synthetic exploration corpus with clean-control, response-value drift, stateful read-ordering, and paired-field interaction cases.
+- Pin fixture, schema and protocol-runner SHA-256 digests and validate the corpus manifest and workflow/contract schemas before executing targets.
+- Add a matched-budget static/adaptive protocol runner that checks expected findings, records sanitized schedule fingerprints, and repeats each fixed seed to test reproducibility.
+- Report per-case outcomes, paired detection categories, schedule stability, run times, seeds and budgets while explicitly limiting claims to the synthetic fixtures.
+- Run the protocol in the Linux/Windows CI matrix and include its files in the verified source archive.
+
+This remains an alpha validation fixture, not an external benchmark or claim of general effectiveness. The paired-field interaction is an intentionally narrow toy defect and its seed is pinned to a known schedule.
+
 ## 0.11.0a1 - Supported public Python API v1 (alpha)
 
 - Expose a versioned Python API for command-line differential comparisons, compatibility contracts, and JSON/JUnit report output.
