@@ -291,46 +291,66 @@ def _collect_safe_json_differences(
     right: Any,
     *,
     pointer: str = "",
+    display_pointer: str = "",
     ignored_paths: Sequence[str] = (),
     output: list[str] | None = None,
     max_pointers: int = 24,
     depth: int = 0,
 ) -> list[str]:
-    """Collect bounded JSON Pointer paths without copying response values."""
+    """Collect bounded JSON Pointer paths without copying values or leaking sensitive keys.
+
+    `pointer` always follows the original JSON document and is used for contract
+    matching. `display_pointer` is the sanitized path shown to users. Keeping
+    these separate prevents sensitive-key redaction from accidentally defeating
+    an ignore-path rule.
+    """
     paths = output if output is not None else []
     if len(paths) >= max_pointers or depth > 8 or _is_ignored_pointer(pointer, ignored_paths):
         return paths
     if type(left) is not type(right):
-        paths.append(pointer or "/")
+        paths.append(display_pointer or "/")
         return paths
     if isinstance(left, dict):
         keys = sorted(set(left) | set(right), key=str)
         for key in keys:
             if len(paths) >= max_pointers:
                 break
-            escaped = _pointer_escape(str(key))
-            child = f"{pointer}/{escaped}"
+            raw_segment = str(key).replace("~", "~0").replace("/", "~1")
+            raw_child = f"{pointer}/{raw_segment}"
+            display_child = f"{display_pointer}/{_pointer_escape(str(key))}"
             if key not in left or key not in right:
-                if not _is_ignored_pointer(child, ignored_paths):
-                    paths.append(child)
+                if not _is_ignored_pointer(raw_child, ignored_paths):
+                    paths.append(display_child)
             else:
                 _collect_safe_json_differences(
-                    left[key], right[key], pointer=child, ignored_paths=ignored_paths,
-                    output=paths, max_pointers=max_pointers, depth=depth + 1,
+                    left[key],
+                    right[key],
+                    pointer=raw_child,
+                    display_pointer=display_child,
+                    ignored_paths=ignored_paths,
+                    output=paths,
+                    max_pointers=max_pointers,
+                    depth=depth + 1,
                 )
     elif isinstance(left, list):
         if len(left) != len(right):
-            paths.append(pointer or "/")
+            paths.append(display_pointer or "/")
             return paths
         for index, (left_item, right_item) in enumerate(zip(left, right)):
             if len(paths) >= max_pointers:
                 break
             _collect_safe_json_differences(
-                left_item, right_item, pointer=f"{pointer}/{index}", ignored_paths=ignored_paths,
-                output=paths, max_pointers=max_pointers, depth=depth + 1,
+                left_item,
+                right_item,
+                pointer=f"{pointer}/{index}",
+                display_pointer=f"{display_pointer}/{index}",
+                ignored_paths=ignored_paths,
+                output=paths,
+                max_pointers=max_pointers,
+                depth=depth + 1,
             )
     elif left != right:
-        paths.append(pointer or "/")
+        paths.append(display_pointer or "/")
     return paths
 
 
