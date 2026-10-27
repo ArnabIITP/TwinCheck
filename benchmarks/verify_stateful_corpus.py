@@ -304,6 +304,11 @@ def _run_case(
                                if finding.get("minimized") and _find_step({"findings": [finding]}, expected["step_name"])), None)
                 if target is None:
                     raise CorpusFailure(f"{case['id']}: expected the seeded finding to be minimized")
+                # Re-check the minimized trace independently. A minimized flag alone
+                # is not evidence that the original named mismatch survived.
+                minimized_detail = _verify_finding(
+                    {"findings": [target]}, expected, f"{case['id']} minimized"
+                )
                 steps_after = len(target.get("sequence_definition", {}).get("steps", []))
                 minimum = expected.get("maximum_steps_after_minimization", 1)
                 if steps_after > minimum or steps_after >= len(sequence["steps"]):
@@ -314,6 +319,7 @@ def _run_case(
                     "step_count_after": steps_after,
                     "target_step": expected["step_name"],
                     "mismatch_preserved": True,
+                    "verified_minimized_finding": minimized_detail,
                 }
                 _write_json(output_dir / "minimized" / f"{case['id']}.json", {
                     "sequence": target["sequence_definition"],
