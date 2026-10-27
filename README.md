@@ -463,7 +463,7 @@ TwinCheck is being built around one product promise: a compatibility claim shoul
 | v0.9 | Multi-failure stateful corpus, safe difference explanations, schema validation, minimization and pack replay | Merged as `0.9.0a1` alpha; Linux/Windows CI matrix green |
 | v0.10 | Opt-in observation-driven candidate generation, fixed-fixture mode comparison and deterministic adaptive evidence | `0.10.0a1` alpha; Linux/Windows matrix and comparison gate included |
 | Later | Isolation and richer observability | Planned, security-sensitive |
-| v1.0 | Stable APIs, benchmark corpus and trusted compatibility workflow | Not yet close to complete |
+| v1.0 | Stable APIs, benchmark corpus and trusted compatibility workflow | Not released; compatibility policy and package validation are being established |
 
 ## Development
 
@@ -483,6 +483,18 @@ python benchmarks/verify_stateful_corpus.py
 ```
 
 The verifier creates a new `reports/stateful-corpus-v2/` directory containing synthetic JSON evidence, a minimized workflow and a portable regression pack. Delete that output directory before rerunning, or pass a different path using `--output-dir`. See [the corpus guide](benchmarks/README.md) for case definitions and limitations.
+
+### Package build and release validation
+
+Build and verify the actual wheel and source archive:
+
+```bash
+python -m pip install --upgrade build twine
+python -m build --outdir dist
+python scripts/verify_distribution.py --dist-dir dist
+```
+
+This installs the wheel into an isolated temporary virtual environment and checks the installed CLI from outside the source checkout. See the [release and compatibility policy](docs/release-process.md). CI and the manual release-candidate workflow validate artifacts but do not publish them to PyPI.
 
 A small end-to-end smoke benchmark is documented under [`benchmarks/`](benchmarks/README.md). Benchmark results must be published with the Python version, operating system, number of cases, rounds, and exact commands. A result from one machine is not a general performance claim.
 
