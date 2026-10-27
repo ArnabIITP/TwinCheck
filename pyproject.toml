@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "twincheck"
-version = "0.8.0a1"
-description = "Evidence-first differential testing with verified stateful replay and versioned compatibility contracts."
+version = "0.9.0a1"
+description = "Reproducible evidence-first differential testing with portable stateful regression workflows."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
@@ -24,6 +24,9 @@ classifiers = [
   "Topic :: Software Development :: Testing",
 ]
 dependencies = []
+
+[project.optional-dependencies]
+test = ["jsonschema>=4.21,<5"]
 
 [project.scripts]
 twincheck = "twincheck.cli:main"
