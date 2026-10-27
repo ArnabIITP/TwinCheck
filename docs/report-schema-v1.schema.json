@@ -384,11 +384,61 @@
       "properties": {
         "algorithm_version": {
           "type": "integer",
-          "enum": [1, 2]
+          "enum": [1, 2, 3]
+        },
+        "mode": {
+          "enum": ["static", "adaptive"]
         },
         "candidate_count": {
           "type": "integer",
           "minimum": 1
+        },
+        "pre_generated_candidate_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "adaptive_generated_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200
+        },
+        "adaptive_executed_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "adaptive_generated_candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["candidate_sha256", "mutation_type", "generation_reason"],
+            "properties": {
+              "candidate_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "mutation_type": {
+                "type": "string"
+              },
+              "generation_reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "max_adaptive_candidates": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200
+        },
+        "max_run_seconds": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "stop_reason": {
+          "enum": ["case_budget_exhausted", "candidate_pool_exhausted", "run_time_budget_exhausted"]
         },
         "seed": {
           "type": "integer"

@@ -136,6 +136,9 @@ def build_parser() -> argparse.ArgumentParser:
     sequence_explore.add_argument("--minimize", action="store_true", help="reduce up to three failing workflows by deleting steps and shrinking JSON request bodies while preserving the same mismatch")
     sequence_explore.add_argument("--max-findings-to-minimize", type=int, default=3, help="maximum findings to minimize (0-20, default: 3)")
     sequence_explore.add_argument("--max-minimization-trials", type=int, default=30, help="maximum reset-backed minimization trials per finding (1-200, default: 30)")
+    sequence_explore.add_argument("--mode", choices=("static", "adaptive"), default="static", help="exploration algorithm: static seeded pool (default) or opt-in observation-driven generation")
+    sequence_explore.add_argument("--max-adaptive-candidates", type=int, default=8, help="maximum additional candidates generated from new observations in adaptive mode (0-200, default: 8)")
+    sequence_explore.add_argument("--max-run-seconds", type=float, default=300, help="wall-clock budget for starting cases and minimization trials (1-3600, default: 300)")
     sequence_explore.add_argument("--output", help="write a machine-readable JSON evidence report to this path")
     sequence_explore.add_argument("--junit", help="write JUnit XML for CI ingestion")
     sequence_explore.add_argument("--format", choices=("text", "json"), default="text", help="console output format")
@@ -453,6 +456,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 minimize=args.minimize,
                 max_findings_to_minimize=args.max_findings_to_minimize,
                 max_minimization_trials=args.max_minimization_trials,
+                mode=args.mode,
+                max_adaptive_candidates=args.max_adaptive_candidates,
+                max_run_seconds=args.max_run_seconds,
             )
         elif args.subcommand == "compare-http-sequence":
             sequence, sequence_digest = load_sequence(args.sequence)

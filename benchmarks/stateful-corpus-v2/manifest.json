@@ -17,7 +17,7 @@
     "benchmarks/stateful-corpus-v2/contracts/ignore-volatile-id.json": "37440f1d5030c6a4c6eddcdd97721883478e589a1bcdcc150d05ec61b6a2a041",
     "docs/stateful-http-sequence-v1.schema.json": "e42fa265f8c666f5991407566bac3d88da236d5719ecf1953202010c866992b4",
     "docs/compatibility-contract-v1.schema.json": "6ebe31d68549f911957681410daea3228f6bedd5e9edd0851cf36fcff628540a",
-    "docs/report-schema-v1.schema.json": "3917a8b0bfc43f7a8ef216c77df470b20097aa1991688a5b8c068db566b3e42d",
+    "docs/report-schema-v1.schema.json": "e73bf964a9c092816e24adbb9adcf27cd5d3cb3421c07530abda8cd3c782a28a",
     "docs/stateful-regression-pack-v1.schema.json": "f385eeccabb90d5ad3e2a53865424077882b05ef8c6066fe252a63cb654b7bd9"
   },
   "cases": [

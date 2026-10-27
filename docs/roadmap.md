@@ -76,10 +76,21 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Add Windows CI alongside the Python 3.11/3.12/3.13 Linux matrix
 - [x] Merge after all four CI matrix jobs passed on the PR head
 
+## v0.10 — observation-driven stateful exploration
+
+- [x] Keep static seeded exploration as the unchanged default and make adaptive exploration opt-in
+- [x] Define a value-free response feedback model from response-branch, adjacent-transition and difference-signature novelty
+- [x] Generate bounded paired body-boundary candidates from a newly observed earlier step into a later workflow transition
+- [x] Record algorithm version, generation rationale, selection rationale, candidate counts and stop reason
+- [x] Preserve reset-before-candidate/minimization behavior, dependency validation and request/output limits
+- [x] Add a synthetic two-field interaction defect that adaptive mode finds but static mode misses under the same two-case execution budget
+- [x] Add a fixed-fixture static/adaptive comparison report and run it in Linux/Windows CI
+- [x] Document that adaptive feedback is a bounded heuristic, not learned state-machine coverage
+
 ## Later — research and expansion, not release blockers
 
 - [ ] Design an adapter protocol for optional instrumentation or coverage feedback; first define its trust and reproducibility contract
-- [ ] Evaluate observation-driven mutation generation against the fixed seeded candidate pool
+- [x] Evaluate observation-driven mutation generation against the fixed seeded candidate pool on a pinned synthetic fixture
 - [ ] Add a broader independently reviewable synthetic corpus before attempting external API benchmarks
 - [ ] Consider adapters beyond HTTP only after reset, replay, and reporting guarantees have clear interfaces
 
