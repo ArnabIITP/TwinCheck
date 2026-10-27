@@ -59,9 +59,10 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Explicit named-step dependencies with validation of earlier-step ordering
 - [x] Prevent adjacent-swap mutations from reversing directly declared dependencies
 - [x] Add a small, versioned synthetic stateful corpus and a deliberately broken reset negative control
-- [ ] Test header-secret redaction across evidence reports and portable packs
-- [ ] Run clean-install, CLI and corpus smoke checks across Python 3.11, 3.12 and 3.13
-- [ ] Update and verify examples, threat model and release notes after CI feedback
+- [x] Add a regression test that a supplied request-header secret appears neither in JSON evidence nor the portable stateful pack
+- [x] Update the sample cart service, sequence examples, schema, threat model, changelog, and user guide
+- [x] Add a corpus-fixture validation smoke test
+- [ ] Run the full suite and clean-install/CLI/corpus smoke checks on Python 3.11, 3.12 and 3.13 in GitHub Actions
 
 ## Later — research and expansion, not release blockers
 
