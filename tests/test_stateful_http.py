@@ -312,7 +312,7 @@ class StatefulHttpTests(unittest.TestCase):
             )
             self.assertNotIn(secret, pack_text)
 
-def test_variant_generator_covers_boundaries_transitions_and_is_seeded(self):
+    def test_variant_generator_covers_boundaries_transitions_and_is_seeded(self):
         sequence = _sequence()
         first = generate_sequence_variants(sequence, max_cases=30, seed=19)
         second = generate_sequence_variants(sequence, max_cases=30, seed=19)
