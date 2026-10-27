@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "name": "payment-idempotency-retry",
+  "steps": [
+    {
+      "name": "payment-first",
+      "method": "POST",
+      "path": "/payments",
+      "body": {
+        "amount": 100,
+        "currency": "USD"
+      }
+    },
+    {
+      "name": "payment-retry",
+      "method": "POST",
+      "path": "/payments",
+      "body": {
+        "amount": 100,
+        "currency": "USD"
+      },
+      "depends_on": [
+        "payment-first"
+      ]
+    }
+  ]
+}
