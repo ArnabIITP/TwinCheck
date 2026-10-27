@@ -27,3 +27,20 @@ python benchmarks/verify_stateful_corpus.py
 The verifier checks SHA-256 pins for the sequences, contracts, service fixture, and schemas; validates schema structure; runs the expected cases; verifies safe response-difference pointers; confirms named-step mismatch preservation during minimization; exports and replays a regression pack; and proves a tampered pack is rejected. It writes JSON reports, the minimized workflow, the pack and a summary into a new `reports/stateful-corpus-v2/` directory. That output directory must not already exist; use `--output-dir` to choose a new one.
 
 CI runs the same verifier on Linux for Python 3.11, 3.12 and 3.13, and on Windows for Python 3.11. Synthetic evidence is uploaded as a short-retention GitHub Actions artifact for each matrix job. The fixture does not represent production service behavior, and a reset-health assertion verifies only the explicit fields it names.
+
+## Synthetic exploration protocol v1
+
+The dedicated exploration corpus is separate from the stateful regression gate. It contains four expected-outcome scenarios: a clean compatibility control, a response-value drift, a stateful read-ordering defect, and a two-field interaction defect designed to expose one known static/adaptive difference under a two-case budget.
+
+Run the paired protocol from the repository root after installing the test extra:
+
+```bash
+python -m pip install -e ".[test]"
+python benchmarks/run_exploration_protocol.py --rounds 2 --max-run-seconds 20 --output reports/exploration-protocol-v1.json
+```
+
+Before invoking the targets, the runner validates the manifest against [its versioned schema](exploration-corpus-v1.schema.json), verifies SHA-256 pins for every listed service, sequence, contract, schema and the protocol runner, and validates sequence/contract files with the project schemas and loaders. All targets bind to ephemeral loopback ports and use in-memory synthetic state.
+
+Static and adaptive runs use the same per-case candidate budget and pinned seeds. The report includes each run's expected-outcome status, executed case count, named difference steps, mutation-schedule fingerprint, response-branch/transition counts, elapsed time, and paired results. Repeated runs must retain the same schedule and outcome. Sensitive request/response bodies are not copied into the summary. CI executes this protocol on Linux/Python 3.11–3.13 and Windows/Python 3.11 and stores the result alongside the existing stateful corpus evidence.
+
+The paired-field interaction is a deliberately small test of a known adaptive candidate, not evidence that adaptive mode is generally more effective. The suite exercises one synthetic cart API; it does not cover production APIs, concurrency, distributed state, or every mutation strategy. Reported timings include local server lifecycle overhead and are diagnostic only. Do not use these numbers as general performance or superiority claims.
