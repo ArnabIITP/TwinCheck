@@ -9,9 +9,9 @@ TwinCheck is an early alpha at version 0.10.0a1. The repository has a release-ca
 | Surface | Current compatibility promise |
 | --- | --- |
 | CLI commands and flags | Documented user interface, but pre-1.0 and allowed to change between alpha releases. Breaking changes should be called out in the changelog and help text. |
-| JSON schemas in \`docs/*-vN.schema.json\` | Versioned artifact formats. An additive optional field may be added only when old artifacts remain valid and behavior remains compatible. A breaking format or interpretation change requires a new schema major version/file and migration notes. |
+| JSON schemas in `docs/*-vN.schema.json` | Versioned artifact formats. An additive optional field may be added only when old artifacts remain valid and behavior remains compatible. A breaking format or interpretation change requires a new schema major version/file and migration notes. |
 | Stateful sequence and regression-pack files | Their schema filenames define the file-format major version. Validation must reject unsupported major versions rather than silently reinterpret them. |
-| Python import API | Not stable yet. \`twincheck.__version__\` is public metadata; other module functions/classes are implementation-level until explicitly documented as public. |
+| Python import API | Not stable yet. `twincheck.__version__` is public metadata; other module functions/classes are implementation-level until explicitly documented as public. |
 | Report semantics | Reports are evidence artifacts, not promises of formal equivalence or a complete record of hidden service state. Version the schema before changing its meaning incompatibly. |
 
 Because the package is below 1.0, users should pin a version for reproducible automation and review the changelog before upgrading. Report schemas are versioned, but that does not make every Python function or CLI detail stable.
@@ -20,13 +20,13 @@ Because the package is below 1.0, users should pin a version for reproducible au
 
 Run the same distribution checks as CI from the repository root:
 
-\`\`\`bash
+```bash
 python -m pip install --upgrade build twine
 python -m build --outdir dist
 python scripts/verify_distribution.py --dist-dir dist
-\`\`\`
+```
 
-The verifier checks that exactly one wheel and one source archive exist, runs \`twine check --strict\`, creates a clean temporary virtual environment, installs the wheel without dependencies or network access, and checks the CLI version and adaptive exploration help from outside the checkout. This catches packages that pass tests only because Python imports from the source tree.
+The verifier checks that exactly one wheel and one source archive exist, runs `twine check --strict`, creates a clean temporary virtual environment, installs the wheel without dependencies or network access, and checks the CLI version and adaptive exploration help from outside the checkout. This catches packages that pass tests only because Python imports from the source tree.
 
 ## GitHub Actions workflow
 
@@ -38,7 +38,7 @@ Neither workflow publishes to PyPI, creates a public release, or tags a version.
 
 Before publishing a release:
 
-1. Confirm the version in \`pyproject.toml\` and \`src/twincheck/__init__.py\` match, and update \`CHANGELOG.md\`.
+1. Confirm the version in `pyproject.toml` and `src/twincheck/__init__.py` match, and update `CHANGELOG.md`.
 2. Run the full CI matrix and the pinned synthetic regression corpus.
 3. Run the release-candidate workflow and inspect the built wheel and source archive.
 4. Install the wheel in a clean environment and exercise a documented CLI workflow.
