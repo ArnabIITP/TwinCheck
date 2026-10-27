@@ -21,18 +21,20 @@ TwinCheck is a developer tool run locally by someone who trusts both target prog
 | Output contains invalid UTF-8 | Decode with replacement and record byte counts/truncation | This is not byte-exact binary comparison |
 | Report contains a malicious command | Replay requires explicit reference/candidate commands from the user | A user can still voluntarily run an unsafe command |
 | Report leaks sensitive input | JUnit failure text uses hashes/categories rather than raw input | JSON evidence intentionally contains exact failing input; users must secure artifacts |
-| Target modifies host or reaches the network | Documentation warns that targets run with current privileges | No filesystem, network, user, container, or syscall isolation |
+| CLI target modifies host or reaches the network | Documentation warns that target commands run with current privileges | No filesystem, network, user, container, or syscall isolation |
+| HTTP adapter used against a remote service | Adapter accepts only `localhost`, `127.0.0.1`, or `::1` origins and rejects embedded URL credentials | Services bound to loopback are not sandboxed; no DNS or network isolation is provided for CLI-launched programs |
+| Request header contains credentials | Header values are not copied into the JSON report; only header names are recorded | The target service may echo credentials; paths, request bodies and responses remain user-controlled evidence and must be reviewed |
 | Target is nondeterministic | Optional repeated runs can flag observed instability | Repetition cannot characterize every source of nondeterminism |
 
 ## Non-goals
 
-TwinCheck is not a sandbox, antivirus product, exploit mitigation, malware analysis environment, or proof system. It does not make untrusted executables safe to run. It does not currently enforce CPU or memory limits, filesystem boundaries, outbound network policy, or temporary-storage quota.
+TwinCheck is not a sandbox, antivirus product, exploit mitigation, malware analysis environment, or proof system. It does not make untrusted executables or local HTTP services safe to run. The HTTP adapter restricts requested origins to loopback addresses but does not isolate the target service, prevent that service from making outbound connections, or police CLI target networking. It does not currently enforce CPU or memory limits, filesystem boundaries, process-level outbound network policy, or temporary-storage quota.
 
 ## Guidance
 
 - Only execute commands you trust and are authorized to test.
 - Do not expose a web/API service that accepts arbitrary target commands or input corpora from untrusted users.
 - Do not run third-party binaries in a sensitive environment simply because TwinCheck applies a timeout.
-- Treat JSON reports as potentially sensitive: they include raw failing inputs and captured output.
+- Treat JSON reports as potentially sensitive: they include raw failing inputs and captured output. The HTTP adapter does not record request header values, but a response body or generated input can still reveal sensitive values.
 - Before adding a container or OS-sandbox backend, define the threat boundary, default permissions, resource limits, host-platform behavior and escape-risk review. A container is isolation in depth, not an unconditional security guarantee.
 - Report vulnerabilities privately through GitHub's security reporting flow if available, or contact the repository maintainer through a private channel.

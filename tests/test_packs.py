@@ -66,6 +66,18 @@ class PackTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "hash does not match"):
                 export_cases_from_report(report_path, root / "pack")
 
+    def test_export_rejects_stateful_http_reports(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for source in ("stateful-http-sequence", "stateful-http-exploration"):
+                with self.subTest(source=source):
+                    report_path = root / f"{source}.json"
+                    report = self.report("{\"steps\": []}")
+                    report["input_source"] = source
+                    report_path.write_text(json.dumps(report), encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, "use replay-http-sequence"):
+                        export_cases_from_report(report_path, root / f"pack-{source}")
+
     def test_export_will_not_overwrite_existing_directory(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

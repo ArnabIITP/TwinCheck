@@ -47,3 +47,12 @@ twincheck replay-pack --pack tests/twincheck-regressions \
 ```
 
 Once the candidate is fixed, replay should return zero. A recurrence of a difference returns a non-zero status.
+
+
+## Stateful HTTP workflow example
+
+Start two local cart services from the repository root, using different `--cart-id` values and set `--total-delta 1` on the candidate to simulate a behavioral regression. Run `twincheck compare-http-sequence` with `examples/sequences/cart-create-add-read-v1.json` and `examples/contracts/stateful-cart-v1.json`. The `create-cart` response provides a `/body/id` capture used in later request paths. The contract ignores the cart identifier but not the final total. Then set the candidate delta to zero and replay the failed report with `replay-http-sequence --allow-side-effects`.
+
+## Transition-aware workflow exploration
+
+The cart service also exposes `POST /__test/reset`, which clears its in-memory cart items. Use `examples/sequences/cart-reset-v1.json` with `explore-http-sequence` to try JSON body boundaries, adjacent step swaps, omitted steps and repeated steps. Exploration always requires `--allow-side-effects` and a user-owned reset workflow. Add `--minimize` to remove steps from a failing workflow while preserving the mismatch at the same named step. The reset endpoint in this demo is only appropriate for local test instances; a 2xx status cannot prove all hidden state was cleared.

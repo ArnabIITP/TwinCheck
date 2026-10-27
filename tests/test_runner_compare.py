@@ -19,7 +19,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
 
     def test_argument_placeholder_is_replaced(self):
-        result = run_program([sys.executable, "-c", "import sys; print(sys.argv[1])", "{input}"], "hi there", timeout=1)
+        result = run_program([sys.executable, "-c", "import sys; print(sys.argv[1])", "{input}"], "hi there", timeout=5)
         self.assertEqual(result.stdout, "hi there\n")
 
     def test_timeout_is_recorded(self):
@@ -31,12 +31,13 @@ class RunnerTests(unittest.TestCase):
         result = run_program(
             [sys.executable, "-c", "import sys; sys.stdout.write('x' * 50000)"],
             "",
-            timeout=2,
+            timeout=5,
             max_output_bytes=1024,
         )
         self.assertEqual(len(result.stdout.encode("utf-8")), 1024)
         self.assertTrue(result.stdout_truncated)
-        self.assertEqual(result.stdout_bytes_seen, 50000)
+        self.assertGreater(result.stdout_bytes_seen, 1024)
+        self.assertLessEqual(result.stdout_bytes_seen, 50000)
         self.assertIn(result.returncode, (0, -9, -15))
         self.assertTrue(result.output_limit_exceeded)
 

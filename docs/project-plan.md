@@ -1,6 +1,6 @@
 # TwinCheck — Project Plan
 
-**Status:** v0.1 prototype / local-first CLI  
+**Status:** v0.6.0a1 alpha / local-first differential testing  
 **Primary goal:** Make behavioral compatibility testing reproducible, practical, and evidence-based.  
 **Initial audience:** Developers replacing libraries or tools, language-runtime implementers, maintainers of ports/forks, and teams migrating parsers or data processors.
 
@@ -57,27 +57,52 @@ TwinCheck compares the observable behavior of a reference command and a candidat
 - Terminal summary and JSON report.
 - Unit tests, sample bug, CI workflow, security policy, contribution guide, and roadmap.
 
-### v0.2 — Contract-driven compatibility (current alpha)
+### v0.2 — Reproduction and reporting
 
-- Versioned, strictly validated compatibility contracts.
-- Exact-text or structural-JSON comparison for stdout and stderr.
-- JSON Pointer ignore paths for explicitly volatile response fields.
-- Contract fingerprint included in every evidence report.
-- Contract-aware stability checks and minimization.
-- JUnit XML export, saved-finding replay, and contract-pinned regression pack export/replay.
-- Remaining work: shell-escaped reproduction commands, bounded diff previews, and broader cross-platform validation.
+- A clear re-run command for each finding, with correct quoting for the current platform.
+- Bounded side-by-side stdout/stderr diff excerpts.
+- JUnit XML export for standard test dashboards.
+- Replay and promotion of minimized inputs into a regression corpus.
+- Stronger validation for command and corpus configuration.
+- A stable report schema with backward-compatibility tests.
 
-### v0.3 — Structured input generation and adapters
+### v0.3 — Structured inputs and local HTTP (implemented alpha)
 
-- JSON Schema-driven generation with deterministic seeds.
-- Adapter interface for request/response protocols.
-- Local HTTP adapter with explicit server lifecycle and readiness checks.
-- Optional environment-variable and locale controls.
-- Contract-aware HTTP status/header/body rules only after the CLI contract API has been stabilized by use.
+- JSON Schema-driven generation with deterministic seeds for a documented schema subset.
+- Local HTTP adapter for comparing generated JSON requests against two loopback services.
+- Versioned compatibility contracts and explicit request/response observation policy.
 
-### v0.4 — Feedback and observation
+### v0.4 — Stateful HTTP workflows (implemented alpha)
 
-- Optional coverage feedback for instrumented targets.
+- Multi-request sequences with response captures, independent cookie jars, and replayable step-level evidence.
+- Optional reset-before-repeat sequence, requiring successful 2xx responses from both targets.
+
+### v0.5 — Transition-aware workflows (implemented alpha)
+
+- Deterministic mutations of JSON body values, adjacent step order, step removal and step repetition.
+- A user-authored state-reset workflow run before each generated candidate and minimization trial.
+- Bounded step-level delta debugging that preserves a selected mismatch at the same named step.
+- Reset-backed reports that can be replayed against explicitly supplied loopback targets.
+
+### v0.6 — Feedback-guided exploration (implemented alpha)
+
+- [x] Fingerprint response branches by HTTP status, content type and value-free JSON shape.
+- [x] Fingerprint adjacent response transitions and mismatch categories.
+- [x] Prioritize the bounded seeded mutation pool using response novelty, new mutation features and category balance.
+- [x] Record queue scores/reasons and per-case coverage novelty in the report.
+- [x] Minimize request bodies after step deletion, using a shared reset-backed trial budget.
+
+Known limits: response-shape fingerprints are not source-code instrumentation; mutation candidates are generated up front and ranked from feedback; reset correctness is still a property of the user's service reset implementation.
+
+### Next — Stronger workflow semantics
+
+- Service-specific reset markers or state fingerprints, not just HTTP 2xx checks.
+- Explicit precondition/dependency hints and safer operation ordering.
+- Dynamically generated mutations from newly observed response behavior, beyond ranking a pre-generated pool.
+- More representative compatibility benchmarks with repeatable, externally reviewable fixtures.
+
+### Later — Instrumentation, observation and isolation
+
 - Filesystem observation for explicitly configured temporary directories.
 - A container-isolation backend for supported environments.
 - Resource limits for memory, process counts, output size, and runtime where the platform supports them.
@@ -104,9 +129,7 @@ TwinCheck compares the observable behavior of a reference command and a candidat
 
 - `generators.py`: deterministic strategies and corpus loading.
 - `runner.py`: parsed argv, process invocation, stdin/argument input, timeout, raw observations.
-- `compare.py`: output normalization, contract-aware discrepancy categories, repeated-run comparison, and minimization.
-- `contract.py`: versioned contract validation, JSON Pointer redaction, and contract fingerprinting.
-- `packs.py`: portable counterexample packs, manifest validation, and case hash verification.
+- `compare.py`: output normalization, discrepancy categories, and minimization.
 - `engine.py`: orchestration, per-case findings, aggregate summary and limitations.
 - `report.py`: stable JSON serialization and terminal summary.
 - `cli.py`: argument parsing, exit codes, and output destinations.
@@ -188,8 +211,14 @@ GitHub stars and downloads are useful reach signals but do not substitute for th
 
 ## 12. Immediate next actions
 
-1. Validate JSON-semantic contracts against real response pairs and edge cases, including malformed JSON, number forms, escaped JSON Pointers, and ignored arrays.
-2. Ask 3–5 developers who maintain parsers, ports, or replacement tools whether the contract/report workflow fits their compatibility checks.
-3. Add portable regression bundles with pinned contract hashes and replay them in CI.
-4. Use real usage to choose the first structured adapter; avoid claiming a universal compatibility platform before multiple domains work well.
-5. Make a public release after cross-platform CI, install instructions, report schema, license, and security boundaries are verified.
+1. Publish v0.1 to a private repository and keep the initial commit small and reviewable.
+2. Ask 3–5 developers who maintain parsers, ports, or replacement tools to try the demo.
+3. Collect representative compatibility failures and add them as tests only when redistribution is permitted.
+4. Prioritize v0.2 based on repeated user pain, not the most impressive-sounding feature.
+5. Make a public release after install instructions, CI, license, and security notes are verified.
+
+## v0.7 — portable stateful regression workflow
+
+A stateful finding should become a checked-in regression artifact instead of remaining embedded in a verbose run report. The export format includes one sequence, the optional pinned reset sequence, the compatibility contract, source provenance, and file/canonical hashes. It intentionally omits response traces and request-header values. Replay is limited to explicitly provided loopback URLs and requires an explicit acknowledgement that requests may change local data. The pack loader fails closed on hash mismatches, unknown manifest fields, unexpected paths, symlink files, and modified sequence/contract definitions.
+
+The milestone is implementation-complete locally; promotion requires the complete suite to pass in CI on Python 3.11, 3.12, and 3.13.

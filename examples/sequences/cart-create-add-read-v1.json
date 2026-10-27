@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "name": "cart-create-add-read",
+  "steps": [
+    {
+      "name": "create-cart",
+      "method": "POST",
+      "path": "/carts",
+      "body": { "currency": "USD" },
+      "capture": { "cart_id": "/body/id" }
+    },
+    {
+      "name": "add-item",
+      "method": "POST",
+      "path": "/carts/{{cart_id}}/items",
+      "body": { "sku": "demo-sku", "quantity": 2 }
+    },
+    {
+      "name": "read-cart",
+      "method": "GET",
+      "path": "/carts/{{cart_id}}"
+    }
+  ]
+}

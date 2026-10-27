@@ -74,6 +74,30 @@ class EngineTests(unittest.TestCase):
             self.assertEqual(root.attrib["tests"], "1")
             self.assertEqual(len(root.findall("testcase")), 1)
 
+    def test_compare_cli_generates_inputs_from_json_schema_and_records_provenance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            schema_path = Path(tmp) / "request.schema.json"
+            report_path = Path(tmp) / "report.json"
+            schema_path.write_text(json.dumps({
+                "title": "EchoRequest",
+                "type": "object",
+                "required": ["quantity"],
+                "properties": {"quantity": {"type": "integer", "minimum": 0, "maximum": 10}},
+                "additionalProperties": False,
+            }), encoding="utf-8")
+            echo = f'"{sys.executable}" -c "import sys; sys.stdout.write(sys.stdin.read())"'
+            code = self.call_main([
+                "compare", "--reference", echo, "--candidate", echo,
+                "--schema", str(schema_path), "--cases", "2", "--seed", "11",
+                "--output", str(report_path),
+            ])
+            self.assertEqual(code, 0)
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertEqual(report["input_source"], "json-schema")
+            self.assertEqual(report["strategy"], "json-schema")
+            self.assertEqual(report["input_generation"]["schema_title"], "EchoRequest")
+            self.assertEqual(len(report["input_generation"]["json_schema_sha256"]), 64)
+
     def test_replay_uses_saved_input_and_explicit_commands(self):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "source.json"

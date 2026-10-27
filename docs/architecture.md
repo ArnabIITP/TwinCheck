@@ -10,6 +10,8 @@ TwinCheck is a local differential-testing engine for command-line programs. Give
 - `runner.py`: shell-free command parsing, process execution, timeouts and normalized observations.
 - `compare.py`: comparison policy and bounded delta-debugging minimizer.
 - `engine.py`: orchestrates input selection, execution, optional minimization and report construction.
+- `stateful_http.py`: local multi-request HTTP workflows, capture/reuse, independent sessions, optional reset-before-repeat, and replay evidence.
+- `stateful_explore.py`: deterministic workflow mutation, response-feedback candidate prioritization, and bounded reset-backed step/body minimization.
 - `report.py`: JSON serialization and terminal summary.
 - `cli.py`: argument validation, output formatting and exit codes.
 
@@ -29,7 +31,7 @@ Known edge cases are in a stable order. Pseudo-random generation uses a local `r
 
 ## Comparison policy
 
-By default, a difference in timeout status, exit code, stdout or stderr creates a finding. A compatibility contract may select JSON-semantic comparison for stdout/stderr and declare JSON Pointer paths to ignore. JSON object key order and insignificant whitespace do not matter in JSON mode; array order remains significant; malformed JSON is always a finding. The normalized contract and its SHA-256 fingerprint are included in every report. Text output normalization remains opt-in. `--ignore-stderr` and `--ignore-exit-code` should only be used when those observations are not part of the compatibility contract being tested.
+By default, a difference in timeout status, exit code, stdout or stderr creates a finding. Output normalization is opt-in. `--ignore-stderr` and `--ignore-exit-code` should only be used when those observations are not part of the compatibility contract being tested.
 
 ## Minimization
 
@@ -44,4 +46,4 @@ The delta-debugging routine repeatedly attempts to delete input chunks while pre
 5. Optional agent suggestions for new inputs, each validated by actual execution.
 6. Report export to JUnit/SARIF and direct regression-test generation.
 
-Schema-driven input generation, protocol/API adapters, coverage feedback and isolated execution remain roadmap items, not implemented capabilities in the current v0.2.0 alpha.
+Structured inputs, local HTTP, stateful workflows and response-shape/transition feedback exist in the current alpha. The exploration scheduler ranks a bounded candidate pool; response fingerprints are not source-code coverage, and the service reset remains a trusted user-authored workflow. Container isolation, filesystem observation and instrumented service coverage remain future work. Value-level JSON body minimization is bounded and currently implemented as a greedy pass after step deletion.

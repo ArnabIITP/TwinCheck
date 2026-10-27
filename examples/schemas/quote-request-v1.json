@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/schemas/quote-request-v1.json",
+  "title": "QuoteRequestV1",
+  "type": "object",
+  "required": ["quantity", "currency"],
+  "properties": {
+    "quantity": {"type": "integer", "minimum": 0, "maximum": 1000},
+    "currency": {"type": "string", "enum": ["USD", "EUR", "GBP"]},
+    "customer": {
+      "type": "object",
+      "required": ["email"],
+      "properties": {
+        "email": {"type": "string", "format": "email"},
+        "loyalty_level": {"type": "string", "enum": ["standard", "silver", "gold"]}
+      },
+      "additionalProperties": false
+    },
+    "tags": {"type": "array", "items": {"type": "string", "maxLength": 24}, "maxItems": 4, "uniqueItems": true}
+  },
+  "additionalProperties": false
+}

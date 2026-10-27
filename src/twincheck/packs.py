@@ -56,6 +56,11 @@ def export_cases_from_report(report_path: str | Path, output_dir: str | Path) ->
     """
     report_file = Path(report_path)
     report, report_bytes = _read_json_object(report_file, limit=_MAX_REPORT_BYTES, label="source report")
+    if report.get("input_source") in {"stateful-http-sequence", "stateful-http-exploration"}:
+        raise ValueError(
+            "stateful HTTP sequence/exploration findings cannot be exported as command-line input packs; "
+            "use replay-http-sequence with the saved report"
+        )
     raw_findings = report.get("findings")
     if not isinstance(raw_findings, list) or not raw_findings:
         raise ValueError("source report contains no findings to export")

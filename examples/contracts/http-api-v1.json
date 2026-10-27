@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "name": "quote-api-v1",
+  "stdout": {
+    "mode": "json",
+    "ignore_paths": ["/body/request_id", "/body/metadata/generated_at"]
+  },
+  "stderr": {"mode": "exact"},
+  "compare_exit_code": true,
+  "compare_timeout": true
+}
