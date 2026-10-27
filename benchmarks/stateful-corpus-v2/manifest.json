@@ -7,7 +7,7 @@
   "timeout_seconds": 3,
   "max_output_bytes": 100000,
   "fixture_hashes": {
-    "benchmarks/stateful-corpus-v2.schema.json": "8e92c8c099c6c54d4dfcc1ff238ce525a29eacb172f5ea44e43a971ac3ea660a",
+    "benchmarks/stateful-corpus-v2.schema.json": "d6f059771717fcc34650130cddac9c76b2ae1070c078de24b795a3235a67fea6",
     "benchmarks/stateful-corpus-v2/service.py": "5143fe1126594dca0f457ddd881eaa4c8520dd0aebce007c01fd1859587374ce",
     "benchmarks/stateful-corpus-v2/reset-sequence.json": "aaf1b2ba995a1eabdd11cabef4f0218dbbfe0ca5c3daf210d52ce683e8396f5b",
     "benchmarks/stateful-corpus-v2/cases/volatile-control.json": "16af6a363c844a5a43979279a3b37c69b0ac5ac9d1ab4345728d61854f515a36",
