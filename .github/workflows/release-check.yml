@@ -28,7 +28,7 @@ jobs:
       - name: Upload release candidate artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: twincheck-release-candidate-\${{ github.sha }}
+          name: twincheck-release-candidate-${{ github.sha }}
           path: dist/
           if-no-files-found: error
           retention-days: 14
