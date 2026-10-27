@@ -1,0 +1,9 @@
+{
+  "name": "stateful-cart-response-compatibility",
+  "stdout": {
+    "mode": "json",
+    "ignore_paths": [
+      "/body/id"
+    ]
+  }
+}
