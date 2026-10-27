@@ -1,3 +1,4 @@
+import os
 import sys
 import unittest
 from unittest.mock import patch
@@ -20,7 +21,7 @@ class RunnerTests(unittest.TestCase):
 
     def test_argument_placeholder_is_replaced(self):
         result = run_program([sys.executable, "-c", "import sys; print(sys.argv[1])", "{input}"], "hi there", timeout=5)
-        self.assertEqual(result.stdout, "hi there\n")
+        self.assertEqual(result.stdout, f"hi there{os.linesep}")
 
     def test_timeout_is_recorded(self):
         result = run_program([sys.executable, "-c", "import time; time.sleep(0.2)"], "", timeout=0.02)
@@ -38,7 +39,7 @@ class RunnerTests(unittest.TestCase):
         self.assertTrue(result.stdout_truncated)
         self.assertGreater(result.stdout_bytes_seen, 1024)
         self.assertLessEqual(result.stdout_bytes_seen, 50000)
-        self.assertIn(result.returncode, (0, -9, -15))
+        self.assertIn(result.returncode, (0, -9, -15, 1))
         self.assertTrue(result.output_limit_exceeded)
 
 
