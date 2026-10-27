@@ -74,7 +74,7 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Exercise a seeded minimization and assert that the named mismatch remains reproducible
 - [x] Export/replay a pack and test rejection of tampered content
 - [x] Add Windows CI alongside the Python 3.11/3.12/3.13 Linux matrix
-- [ ] Merge only after all four CI matrix jobs are green
+- [x] Merge after all four CI matrix jobs passed on the PR head
 
 ## Later — research and expansion, not release blockers
 
