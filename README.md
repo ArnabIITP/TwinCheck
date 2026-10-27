@@ -461,7 +461,7 @@ TwinCheck is being built around one product promise: a compatibility claim shoul
 | v0.7 | Portable stateful HTTP regression packs, integrity checks, pinned reset and contract, CLI replay | Implemented on the preceding development baseline; release status is separate from source control |
 | v0.8 | Reset-health verification, dependency metadata, secret-redaction regression tests, and a reproducible synthetic corpus | Merged as `0.8.0a1` alpha; Python 3.11/3.12/3.13 CI matrix green |
 | v0.9 | Multi-failure stateful corpus, safe difference explanations, schema validation, minimization and pack replay | Merged as `0.9.0a1` alpha; Linux/Windows CI matrix green |
-| v0.10 | Opt-in observation-driven candidate generation, fixed-fixture mode comparison and deterministic adaptive evidence | Merged as `0.10.0a1` alpha; Linux/Windows CI matrix green |
+| v0.10 | Opt-in observation-driven candidate generation, fixed-fixture mode comparison and deterministic adaptive evidence | `0.10.0a1` alpha; Linux/Windows matrix and comparison gate included |
 | Later | Isolation and richer observability | Planned, security-sensitive |
 | v1.0 | Stable APIs, benchmark corpus and trusted compatibility workflow | Not yet close to complete |
 
