@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0a1 - Observation-driven stateful exploration (alpha)
+
+- Add an opt-in adaptive exploration mode that generates paired scalar-boundary candidates after newly observed response branches, adjacent transitions, or difference signatures.
+- Preserve static seeded exploration as the default and record the algorithm version, generation rationale, selection rationale, candidate counts, budget and stop reason.
+- Add a bounded wall-clock start gate alongside case, timeout, output and minimization-trial limits. Each reset-backed candidate/minimization workflow continues to use explicit reset and health semantics.
+- Add an end-to-end test where adaptive exploration finds a two-field interaction defect that static exploration misses under the same two-case budget.
+- Add a repeatable static-vs-adaptive comparison script for a pinned synthetic corpus fixture and run it in the Linux/Windows CI matrix.
+- Document that the heuristic is not general state-machine learning and that response-shape novelty is not source-code coverage.
+
+This remains an alpha. The comparison is fixture-only and is not a general performance or superiority claim. An in-flight workflow can finish after the wall-clock deadline, bounded by the remaining per-request timeout and sequence limits.
+
 ## 0.9.0a1 - Reproducible stateful evidence (alpha)
 
 - Add a versioned five-case synthetic corpus: declared volatile-ID control, cart total drift, stateful read-ordering defect, idempotency/retry defect, and a reset-health guard that must block a stale target.
