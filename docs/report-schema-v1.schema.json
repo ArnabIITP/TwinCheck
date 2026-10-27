@@ -384,7 +384,7 @@
       "properties": {
         "algorithm_version": {
           "type": "integer",
-          "const": 1
+          "enum": [1, 2]
         },
         "candidate_count": {
           "type": "integer",
