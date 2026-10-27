@@ -286,6 +286,17 @@ def _is_ignored_pointer(pointer: str, ignored_paths: Sequence[str]) -> bool:
     return any(pointer == item or pointer.startswith(item.rstrip("/") + "/") for item in ignored_paths)
 
 
+def _sanitize_pointer(pointer: str) -> str:
+    """Redact sensitive key names in a JSON Pointer used for display."""
+    if not pointer.startswith("/"):
+        return pointer
+    segments = pointer[1:].split("/")
+    return "/" + "/".join(
+        "<redacted-key>" if _SENSITIVE_POINTER_SEGMENT.search(segment) else segment
+        for segment in segments
+    )
+
+
 def _collect_safe_json_differences(
     left: Any,
     right: Any,
@@ -397,9 +408,9 @@ def _explain_step_difference(
         "candidate_content_type": content_type(candidate),
         "comparison_rules": {
             "stdout_mode": contract.stdout.mode,
-            "stdout_ignored_json_pointers": list(contract.stdout.ignore_paths),
+            "stdout_ignored_json_pointers": [_sanitize_pointer(item) for item in contract.stdout.ignore_paths],
             "stderr_mode": contract.stderr.mode,
-            "stderr_ignored_json_pointers": list(contract.stderr.ignore_paths),
+            "stderr_ignored_json_pointers": [_sanitize_pointer(item) for item in contract.stderr.ignore_paths],
             "compare_exit_code": contract.compare_exit_code,
             "compare_timeout": contract.compare_timeout,
         },
