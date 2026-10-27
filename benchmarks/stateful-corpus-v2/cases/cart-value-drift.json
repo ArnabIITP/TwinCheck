@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "name": "cart-response-value-drift",
+  "steps": [
+    {
+      "name": "create-cart",
+      "method": "POST",
+      "path": "/carts",
+      "body": {
+        "currency": "USD"
+      },
+      "capture": {
+        "cart_id": "/body/id"
+      }
+    },
+    {
+      "name": "add-item",
+      "method": "POST",
+      "path": "/carts/{{cart_id}}/items",
+      "body": {
+        "sku": "synthetic-sku",
+        "quantity": 2
+      },
+      "depends_on": [
+        "create-cart"
+      ]
+    },
+    {
+      "name": "read-cart",
+      "method": "GET",
+      "path": "/carts/{{cart_id}}",
+      "depends_on": [
+        "add-item"
+      ]
+    }
+  ]
+}
