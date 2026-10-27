@@ -940,7 +940,7 @@ def run_http_sequence_exploration(
                 minimized_step_digest = _same_steps_digest(value_minimized)
                 if minimized_step_digest != original_step_digest:
                     minimized_report = run_candidate(value_minimized)
-                    if minimized_report["findings"] and _preserves_target_failure(
+                    if not minimized_report.get("_budget_exhausted") and minimized_report["findings"] and _preserves_target_failure(
                         minimized_report, target_name, target_categories
                     ):
                         original_steps_by_name = {
