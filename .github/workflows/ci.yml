@@ -41,6 +41,15 @@ jobs:
         run: python -m twincheck --help
       - name: Verify versioned stateful regression corpus
         run: python benchmarks/verify_stateful_corpus.py --output-dir "${{ runner.temp }}/twincheck-stateful-corpus-v2"
+      - name: Compare static and adaptive exploration on the pinned fixture
+        run: >-
+          python benchmarks/compare_exploration_modes.py
+          --case stateful-read-ordering
+          --seed 19
+          --max-cases 12
+          --max-run-seconds 60
+          --minimization-trials 12
+          --output "${{ runner.temp }}/twincheck-stateful-corpus-v2/exploration-mode-comparison.json"
       - name: Upload synthetic corpus evidence
         if: always()
         uses: actions/upload-artifact@v4
