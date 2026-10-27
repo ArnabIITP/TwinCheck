@@ -68,6 +68,7 @@ def main() -> int:
         "SECURITY.md",
         "LICENSE",
         "docs/release-process.md",
+        "docs/python-api.md",
         "docs/report-schema-v1.schema.json",
         "docs/stateful-http-sequence-v1.schema.json",
         "docs/stateful-regression-pack-v1.schema.json",
@@ -75,6 +76,7 @@ def main() -> int:
         "benchmarks/stateful-corpus-v2/manifest.json",
         "examples/README.md",
         "tests/test_stateful_http.py",
+        "tests/test_public_api.py",
         "scripts/verify_distribution.py",
     }
     if sdists[0].name.endswith((".tar.gz", ".tgz")):
@@ -142,11 +144,37 @@ def main() -> int:
                     f"installed CLI help does not expose the expected option {required_option}"
                 )
 
+        api_probe = """
+import shlex
+import sys
+from twincheck import API_VERSION, compare_commands, contract_from_dict
+
+assert API_VERSION == 1
+
+def command(code):
+    return shlex.join([sys.executable, "-c", code])
+
+report = compare_commands(
+    command("import sys;sys.stdout.write(sys.stdin.read().upper())"),
+    command("import sys;sys.stdout.write(sys.stdin.read().lower())"),
+    cases=3,
+    strategy="text",
+    seed=0,
+    contract=contract_from_dict({"name": "distribution-api-smoke"}),
+)
+assert report["cases_executed"] == 3
+assert report["summary"]["differences_found"] > 0
+print("public API v1 smoke test passed")
+"""
+        api_output = _run([str(python), "-c", api_probe], cwd=working_dir)
+        if api_output != "public API v1 smoke test passed":
+            raise RuntimeError(f"unexpected public API smoke-test output: {api_output!r}")
+
         print(f"Verified wheel: {wheels[0].name}")
         print(f"Verified source archive: {sdists[0].name}")
         print(f"Installed version: {expected_version}")
         print(f"Imported module: {imported_path}")
-        print("CLI version/help smoke tests passed outside the source checkout.")
+        print("CLI version/help and public Python API smoke tests passed outside the source checkout.")
 
     return 0
 
