@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.11.0a1 - Supported public Python API v1 (alpha)
+
+- Expose a versioned Python API for command-line differential comparisons, compatibility contracts, and JSON/JUnit report output.
+- Re-export the documented API symbols at the package root and define API_VERSION = 1 as the explicit public compatibility marker.
+- Add API compatibility tests for exports, deterministic generated-case comparison, contract loading, serialization and report writers.
+- Add a clean-wheel API smoke test and require the public API documentation and tests in the source archive.
+- Document which Python imports are supported, how breaking API changes are versioned, and which HTTP workflows remain CLI-only.
+
+This remains pre-1.0 software. API v1 is an explicit compatibility commitment for the documented exports, not a guarantee for internal modules, every report field, or every CLI option.
+
 ## 0.10.0a1 - Observation-driven stateful exploration (alpha)
 
 - Add an opt-in adaptive exploration mode that generates paired scalar-boundary candidates after newly observed response branches, adjacent transitions, or difference signatures.
