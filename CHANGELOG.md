@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.0a1 - Reproducible stateful evidence (alpha)
+
+- Add a versioned five-case synthetic corpus: declared volatile-ID control, cart total drift, stateful read-ordering defect, idempotency/retry defect, and a reset-health guard that must block a stale target.
+- Add `python benchmarks/verify_stateful_corpus.py` to check pinned fixture hashes, validate the corpus and project schemas, execute expected cases, inspect safe difference pointers, prove minimization preserves a named mismatch, export/replay a pack, and reject tampering.
+- Add value-free per-step explanations with status/content-type metadata, the active comparison contract rules, and bounded safe JSON Pointer paths instead of duplicate field values.
+- Expand CI to Linux/Python 3.11, 3.12 and 3.13 plus Windows/Python 3.11; upload synthetic corpus evidence as a GitHub Actions artifact.
+- Keep schema validation in the optional `test` extra; the core library remains dependency-free.
+
+This remains an alpha. The corpus is a deterministic correctness fixture, not a performance benchmark or an indication of coverage-guided testing. The synthetic API does not model distributed state, real databases, or concurrent payment processing.
+
+## 0.8.0a1 - Verifiable stateful regression workflows (alpha)
+
 ## 0.8.0a1 - Verifiable stateful regression workflows (alpha)
 
 - Add an optional versioned reset-health contract to stateful sequences. After every configured reset, TwinCheck makes a separate read-only GET request and checks explicit scalar JSON Pointer assertions on both local targets before running the tested workflow.
