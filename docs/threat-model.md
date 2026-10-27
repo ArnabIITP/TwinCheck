@@ -24,6 +24,8 @@ TwinCheck is a developer tool run locally by someone who trusts both target prog
 | CLI target modifies host or reaches the network | Documentation warns that target commands run with current privileges | No filesystem, network, user, container, or syscall isolation |
 | HTTP adapter used against a remote service | Adapter accepts only `localhost`, `127.0.0.1`, or `::1` origins and rejects embedded URL credentials | Services bound to loopback are not sandboxed; no DNS or network isolation is provided for CLI-launched programs |
 | Request header contains credentials | Header values are not copied into the JSON report; only header names are recorded | The target service may echo credentials; paths, request bodies and responses remain user-controlled evidence and must be reviewed |
+| Reset returns success without clearing state | Optional read-only health GET checks user-declared JSON Pointer assertions before the tested run | Only asserted fields are checked; this is not proof that every hidden or external state was reset |
+| Workflow reorders a prerequisite | Explicit `depends_on` references are validated against named earlier steps; adjacent swaps avoid direct declared dependencies | Undeclared semantic dependencies remain unknown; step removal and duplication can still create invalid application-level workflows |
 | Target is nondeterministic | Optional repeated runs can flag observed instability | Repetition cannot characterize every source of nondeterminism |
 
 ## Non-goals
