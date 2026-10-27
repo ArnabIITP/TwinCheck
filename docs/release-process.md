@@ -26,7 +26,7 @@ python -m build --outdir dist
 python scripts/verify_distribution.py --dist-dir dist
 ```
 
-The verifier checks that exactly one wheel and one source archive exist, runs `twine check --strict`, creates a clean temporary virtual environment, installs the wheel without dependencies or network access, and checks the CLI version and adaptive exploration help from outside the checkout. This catches packages that pass tests only because Python imports from the source tree.
+The verifier checks that exactly one wheel and one source archive exist, runs `twine check --strict`, verifies that the source archive contains the license, release documentation, schemas, corpus fixtures, tests and verification script, then creates a clean temporary virtual environment and installs the wheel without dependencies or network access. It checks the installed CLI version and adaptive exploration help from outside the checkout. This catches incomplete source archives and packages that pass tests only because Python imports from the source tree.
 
 ## GitHub Actions workflow
 
