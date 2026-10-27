@@ -107,14 +107,18 @@ def _check_fixture_hashes(manifest: dict[str, Any]) -> None:
     missing = sorted(referenced - set(pins))
     if missing:
         raise CorpusFailure("manifest does not pin every referenced fixture: " + ", ".join(missing))
+    drift: list[str] = []
     for relative, expected in sorted(pins.items()):
         path = ROOT / relative
         if not path.is_file() or path.is_symlink():
-            raise CorpusFailure(f"pinned fixture is missing or not a regular file: {relative}")
+            drift.append(f"{relative}: missing or not a regular file")
+            continue
         # Normalize checkout line endings so this pin is stable on Windows and POSIX.
         actual = _sha256(path.read_text(encoding="utf-8").replace("\r\n", "\n").encode("utf-8"))
         if actual != expected:
-            raise CorpusFailure(f"fixture SHA-256 drift for {relative}: expected {expected}, got {actual}")
+            drift.append(f"{relative}: expected {expected}, got {actual}")
+    if drift:
+        raise CorpusFailure("fixture SHA-256 drift:\n  " + "\n  ".join(drift))
 
 
 def _validate_checked_in_schemas(manifest_validator: Draft202012Validator) -> tuple[
