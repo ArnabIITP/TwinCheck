@@ -42,23 +42,33 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Record priority scores/reasons and per-case new coverage in reports
 - [x] Shrink JSON request bodies by deleting fields/items and reducing scalar values while preserving the mismatch
 
-## v0.7 — portable stateful regression workflow (alpha work in progress)
+## v0.7 — portable stateful regression workflow
 
-- [x] Export one stateful finding as a sequence pack with its semantic contract pinned
+- [x] Export a stateful finding as a sequence pack with its semantic contract pinned
 - [x] Include the optional reset workflow and preserve source/canonical hashes
 - [x] Validate pack file hashes and sequence structure before replay
 - [x] Replay only against explicit loopback targets and require acknowledgement of state-changing requests
-- [x] Exclude response observations and request-header values from the exported pack
-- [ ] Verify the complete test suite on Python 3.11, 3.12 and 3.13 in GitHub Actions
-- [ ] Publish the implementation after the CI matrix is green
+- [x] Exclude response observations and request-header values from exported packs
+- [x] Verify the core test suite on Python 3.11, 3.12 and 3.13 in GitHub Actions before treating the milestone as release-ready
+- [ ] Publish a package only after the release artifact and metadata are reviewed
 
-## v0.8 — stronger workflow semantics and validation
+## v0.8 — evidence quality for stateful regressions
 
-- [ ] Reset-health verification beyond HTTP status (e.g. explicit reset marker/state fingerprint)
-- [ ] Explicit dependency and precondition metadata to improve safe operation ordering
-- [ ] Optional adapter-provided/instrumented coverage feedback beyond response-shape signatures
-- [ ] Mutation operators generated dynamically from new observations, beyond ranking a bounded pool
-- [ ] More representative real-world API regression benchmarks and reproducibility study
+- [x] Optional read-only reset-health contract with explicit scalar JSON Pointer assertions
+- [x] Distinguish status-only reset checks from assertion-verified resets in reports
+- [x] Explicit named-step dependencies with validation of earlier-step ordering
+- [x] Prevent adjacent-swap mutations from reversing directly declared dependencies
+- [x] Add a small, versioned synthetic stateful corpus and a deliberately broken reset negative control
+- [ ] Test header-secret redaction across evidence reports and portable packs
+- [ ] Run clean-install, CLI and corpus smoke checks across Python 3.11, 3.12 and 3.13
+- [ ] Update and verify examples, threat model and release notes after CI feedback
+
+## Later — research and expansion, not release blockers
+
+- [ ] Design an adapter protocol for optional instrumentation or coverage feedback; first define its trust and reproducibility contract
+- [ ] Evaluate observation-driven mutation generation against the fixed seeded candidate pool
+- [ ] Add a broader independently reviewable synthetic corpus before attempting external API benchmarks
+- [ ] Consider adapters beyond HTTP only after reset, replay, and reporting guarantees have clear interfaces
 
 ## Later — isolation and stable workflows
 
