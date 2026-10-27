@@ -270,6 +270,125 @@ def _make_session_opener():
     return build_opener(ProxyHandler({}), _NoRedirectHandler(), HTTPCookieProcessor(CookieJar()))
 
 
+_SENSITIVE_POINTER_SEGMENT = re.compile(
+    r"(?:pass(?:word)?|secret|token|authorization|cookie|session|credential|api[_-]?key)",
+    re.IGNORECASE,
+)
+
+
+def _pointer_escape(segment: str) -> str:
+    if _SENSITIVE_POINTER_SEGMENT.search(segment):
+        return "<redacted-key>"
+    return segment.replace("~", "~0").replace("/", "~1")
+
+
+def _is_ignored_pointer(pointer: str, ignored_paths: Sequence[str]) -> bool:
+    return any(pointer == item or pointer.startswith(item.rstrip("/") + "/") for item in ignored_paths)
+
+
+def _collect_safe_json_differences(
+    left: Any,
+    right: Any,
+    *,
+    pointer: str = "",
+    ignored_paths: Sequence[str] = (),
+    output: list[str] | None = None,
+    max_pointers: int = 24,
+    depth: int = 0,
+) -> list[str]:
+    """Collect bounded JSON Pointer paths without copying response values."""
+    paths = output if output is not None else []
+    if len(paths) >= max_pointers or depth > 8 or _is_ignored_pointer(pointer, ignored_paths):
+        return paths
+    if type(left) is not type(right):
+        paths.append(pointer or "/")
+        return paths
+    if isinstance(left, dict):
+        keys = sorted(set(left) | set(right), key=str)
+        for key in keys:
+            if len(paths) >= max_pointers:
+                break
+            escaped = _pointer_escape(str(key))
+            child = f"{pointer}/{escaped}"
+            if key not in left or key not in right:
+                if not _is_ignored_pointer(child, ignored_paths):
+                    paths.append(child)
+            else:
+                _collect_safe_json_differences(
+                    left[key], right[key], pointer=child, ignored_paths=ignored_paths,
+                    output=paths, max_pointers=max_pointers, depth=depth + 1,
+                )
+    elif isinstance(left, list):
+        if len(left) != len(right):
+            paths.append(pointer or "/")
+            return paths
+        for index, (left_item, right_item) in enumerate(zip(left, right)):
+            if len(paths) >= max_pointers:
+                break
+            _collect_safe_json_differences(
+                left_item, right_item, pointer=f"{pointer}/{index}", ignored_paths=ignored_paths,
+                output=paths, max_pointers=max_pointers, depth=depth + 1,
+            )
+    elif left != right:
+        paths.append(pointer or "/")
+    return paths
+
+
+def _observation_envelope(observation: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    if not isinstance(observation, Mapping) or observation.get("timed_out") or observation.get("returncode") != 0:
+        return None
+    try:
+        decoded = json.loads(observation.get("stdout", ""))
+    except (json.JSONDecodeError, TypeError, RecursionError):
+        return None
+    return decoded if isinstance(decoded, dict) else None
+
+
+def _explain_step_difference(
+    step: Mapping[str, Any],
+    *,
+    categories: Sequence[str],
+    contract: CompatibilityContract,
+) -> dict[str, Any]:
+    """Explain which safe observables differed without duplicating field values."""
+    reference = _observation_envelope(step.get("reference"))
+    candidate = _observation_envelope(step.get("candidate"))
+    pointers: list[str] = []
+    if reference is not None and candidate is not None:
+        _collect_safe_json_differences(
+            reference, candidate, ignored_paths=contract.stdout.ignore_paths, output=pointers
+        )
+    def status(envelope: Mapping[str, Any] | None) -> int | None:
+        value = envelope.get("status") if envelope is not None else None
+        return value if type(value) is int else None
+    def content_type(envelope: Mapping[str, Any] | None) -> str | None:
+        headers = envelope.get("headers", {}) if envelope is not None else {}
+        if not isinstance(headers, dict):
+            return None
+        for key, value in headers.items():
+            if isinstance(key, str) and key.lower() == "content-type" and isinstance(value, str):
+                return value.split(";", 1)[0].strip().lower()
+        return None
+    return {
+        "difference_categories": list(categories),
+        "reference_status": status(reference),
+        "candidate_status": status(candidate),
+        "reference_content_type": content_type(reference),
+        "candidate_content_type": content_type(candidate),
+        "comparison_rules": {
+            "stdout_mode": contract.stdout.mode,
+            "stdout_ignored_json_pointers": list(contract.stdout.ignore_paths),
+            "stderr_mode": contract.stderr.mode,
+            "stderr_ignored_json_pointers": list(contract.stderr.ignore_paths),
+            "compare_exit_code": contract.compare_exit_code,
+            "compare_timeout": contract.compare_timeout,
+        },
+        "safe_difference_pointers": pointers,
+        "difference_pointer_limit": 24,
+        "values_included": False,
+    }
+
+
 def _one_sequence_run(
     *,
     sequence: Mapping[str, Any],
@@ -375,6 +494,10 @@ def _one_sequence_run(
                 step_result.setdefault("capture_errors", {})[side] = error_variables
 
         step_result["differences"] = list(dict.fromkeys(step_differences))
+        if step_result["differences"]:
+            step_result["explanation"] = _explain_step_difference(
+                step_result, categories=step_result["differences"], contract=options.contract
+            )
         traces.append(step_result)
         sequence_differences.extend(step_result["differences"])
         # A missing capture prevents correct continuation. Keep the partial trace
