@@ -1,6 +1,6 @@
 """TwinCheck: evidence-first differential testing for command-line programs."""
 
-__version__ = "0.11.0a1"
+__version__ = "0.12.0a1"
 
 from .api import (
     API_VERSION,
