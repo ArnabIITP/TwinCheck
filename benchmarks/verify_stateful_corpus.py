@@ -293,14 +293,14 @@ def _run_case(
             detail = _verify_finding(report, expected, case["id"])
             if report["summary"]["differences_found"] < 1:
                 raise CorpusFailure(f"{case['id']}: expected at least one reported difference")
-            record.update({"outcome": "finding", "finding": detail, "differences_found": report["summary"]["differences_found"]})
+            record.update({"outcome": outcome, "finding": detail, "differences_found": report["summary"]["differences_found"]})
             if outcome == "minimized_finding":
                 target = next((finding for finding in report["findings"]
                                if finding.get("minimized") and _find_step({"findings": [finding]}, expected["step_name"])), None)
                 if target is None:
                     raise CorpusFailure(f"{case['id']}: expected the seeded finding to be minimized")
                 steps_after = len(target.get("sequence_definition", {}).get("steps", []))
-                minimum = expected.get("minimum_steps_after_minimization", 1)
+                minimum = expected.get("maximum_steps_after_minimization", 1)
                 if steps_after > minimum or steps_after >= len(sequence["steps"]):
                     raise CorpusFailure(f"{case['id']}: minimization kept {steps_after} steps; expected at most {minimum}")
                 record["minimization"] = {
