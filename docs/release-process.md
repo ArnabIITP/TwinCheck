@@ -2,7 +2,7 @@
 
 ## Current status
 
-TwinCheck is an early alpha at version 0.10.0a1. The repository has a release-candidate validation workflow, but no PyPI publication is configured or triggered by CI. Successful package validation is not itself a public release.
+TwinCheck is an early alpha at version 0.11.0a1. The repository has a release-candidate validation workflow, but no PyPI publication is configured or triggered by CI. Successful package validation is not itself a public release.
 
 ## What is supported today
 
@@ -11,10 +11,10 @@ TwinCheck is an early alpha at version 0.10.0a1. The repository has a release-ca
 | CLI commands and flags | Documented user interface, but pre-1.0 and allowed to change between alpha releases. Breaking changes should be called out in the changelog and help text. |
 | JSON schemas in `docs/*-vN.schema.json` | Versioned artifact formats. An additive optional field may be added only when old artifacts remain valid and behavior remains compatible. A breaking format or interpretation change requires a new schema major version/file and migration notes. |
 | Stateful sequence and regression-pack files | Their schema filenames define the file-format major version. Validation must reject unsupported major versions rather than silently reinterpret them. |
-| Python import API | Not stable yet. `twincheck.__version__` is public metadata; other module functions/classes are implementation-level until explicitly documented as public. |
+| Python import API | API v1 is supported through the names in `twincheck.api.__all__` and matching package-root exports. Compatible additions preserve `API_VERSION`; breaking public names, signatures or documented return behavior require an API version increment and migration notes. Internal modules are not covered. See [python-api.md](python-api.md). |
 | Report semantics | Reports are evidence artifacts, not promises of formal equivalence or a complete record of hidden service state. Version the schema before changing its meaning incompatibly. |
 
-Because the package is below 1.0, users should pin a version for reproducible automation and review the changelog before upgrading. Report schemas are versioned, but that does not make every Python function or CLI detail stable.
+Because the package is below 1.0, users should pin a package version for reproducible automation and review the changelog before upgrading. The documented Python API v1 has its own explicit compatibility marker; report schemas are versioned independently, and neither promise makes internal modules or every CLI detail stable.
 
 ## Build and verify locally
 
