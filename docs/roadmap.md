@@ -61,7 +61,7 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Add a small, versioned synthetic stateful corpus and a deliberately broken reset negative control
 - [x] Add a regression test that a supplied request-header secret appears neither in JSON evidence nor the portable stateful pack
 - [x] Update the sample cart service, sequence examples, schema, threat model, changelog, and user guide
-- [x] Add a corpus-fixture validation smoke test
+- [x] Run the fixed corpus end to end through comparison, reset-health verification, pack export, and replay in CI
 - [ ] Run the full suite and clean-install/CLI/corpus smoke checks on Python 3.11, 3.12 and 3.13 in GitHub Actions
 
 ## Later — research and expansion, not release blockers
