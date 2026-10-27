@@ -8,6 +8,8 @@
 - Add an end-to-end test where adaptive exploration finds a two-field interaction defect that static exploration misses under the same two-case budget.
 - Add a repeatable static-vs-adaptive comparison script for a pinned synthetic corpus fixture and run it in the Linux/Windows CI matrix.
 - Document that the heuristic is not general state-machine learning and that response-shape novelty is not source-code coverage.
+- Add distribution validation that builds a wheel and source archive, checks metadata, and installs the wheel in an isolated environment outside the checkout.
+- Add a manual release-candidate workflow and an explicit pre-1.0 CLI/schema/Python API compatibility policy; the workflow does not publish to PyPI.
 
 This remains an alpha. The comparison is fixture-only and is not a general performance or superiority claim. An in-flight workflow can finish after the wall-clock deadline, bounded by the remaining per-request timeout and sequence limits.
 
