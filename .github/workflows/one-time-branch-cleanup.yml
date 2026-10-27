@@ -1,0 +1,29 @@
+name: One-time obsolete branch cleanup
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/one-time-branch-cleanup.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+      - name: Delete obsolete branches and remove this workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin --delete "release/v0.6.0a1-feedback-guided"
+          git push origin --delete "feat/compatibility-contracts-regression-packs"
+          git push origin --delete "feat/v0.7-stateful-regression-packs"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/one-time-branch-cleanup.yml
+          git commit -m "chore: remove temporary branch cleanup workflow"
+          git push origin HEAD:main
