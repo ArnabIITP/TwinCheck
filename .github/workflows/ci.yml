@@ -50,6 +50,20 @@ jobs:
           --max-run-seconds 60
           --minimization-trials 12
           --output "${{ runner.temp }}/twincheck-stateful-corpus-v2/exploration-mode-comparison.json"
+      - name: Build wheel and source archive
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build --outdir "${{ runner.temp }}/twincheck-dist"
+      - name: Verify distribution from an isolated environment
+        run: python scripts/verify_distribution.py --dist-dir "${{ runner.temp }}/twincheck-dist"
+      - name: Upload verified release candidate
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: twincheck-release-candidate-${{ github.sha }}
+          path: ${{ runner.temp }}/twincheck-dist
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload synthetic corpus evidence
         if: always()
         uses: actions/upload-artifact@v4
