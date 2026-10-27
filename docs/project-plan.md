@@ -1,6 +1,6 @@
 # TwinCheck — Project Plan
 
-**Status:** v0.6.0a1 alpha / local-first differential testing  
+**Status:** v0.11.0a1 alpha / local-first differential testing  
 **Primary goal:** Make behavioral compatibility testing reproducible, practical, and evidence-based.  
 **Initial audience:** Developers replacing libraries or tools, language-runtime implementers, maintainers of ports/forks, and teams migrating parsers or data processors.
 
@@ -94,12 +94,21 @@ TwinCheck compares the observable behavior of a reference command and a candidat
 
 Known limits: response-shape fingerprints are not source-code instrumentation; mutation candidates are generated up front and ranked from feedback; reset correctness is still a property of the user's service reset implementation.
 
-### Next — Stronger workflow semantics
+### v0.11 — Public Python API v1 (implemented alpha)
 
-- Service-specific reset markers or state fingerprints, not just HTTP 2xx checks.
-- Explicit precondition/dependency hints and safer operation ordering.
-- Dynamically generated mutations from newly observed response behavior, beyond ranking a pre-generated pool.
-- More representative compatibility benchmarks with repeatable, externally reviewable fixtures.
+- Expose compare_commands for reproducible command-line differential comparisons.
+- Support validated compatibility contracts and JSON/JUnit evidence output from Python.
+- Version the documented exports with API_VERSION and add compatibility tests for root and module imports.
+- Verify the API from the built wheel outside the source checkout.
+
+Known limits: stateful HTTP comparison and exploration remain CLI-only. The public API returns the existing versioned evidence-report dictionary; report-schema compatibility is governed separately.
+
+### Next — Broader independent validation and interface design
+
+- Build a broader, independently reviewable synthetic corpus before making external benchmark claims.
+- Extend the public API to stateful HTTP workflows only after defining stable request, result and error types.
+- Improve reset-state evidence and test it against more failure modes than HTTP 2xx checks alone.
+- Expand observation-driven mutation beyond the current bounded paired scalar-boundary heuristic.
 
 ### Later — Instrumentation, observation and isolation
 
@@ -110,7 +119,7 @@ Known limits: response-shape fingerprints are not source-code instrumentation; m
 
 ### v1.0 — Reliable compatibility workflow
 
-- Stable public Python API and report schema.
+- Formalize the public Python API v1 and backward-compatible report-schema policy for the 1.0 release.
 - Documented platform support and reproducibility contract.
 - Regression fixture export and CI integrations.
 - Performance evaluation with reproducible datasets and published methodology.
@@ -211,11 +220,11 @@ GitHub stars and downloads are useful reach signals but do not substitute for th
 
 ## 12. Immediate next actions
 
-1. Publish v0.1 to a private repository and keep the initial commit small and reviewable.
-2. Ask 3–5 developers who maintain parsers, ports, or replacement tools to try the demo.
-3. Collect representative compatibility failures and add them as tests only when redistribution is permitted.
-4. Prioritize v0.2 based on repeated user pain, not the most impressive-sounding feature.
-5. Make a public release after install instructions, CI, license, and security notes are verified.
+1. Validate the v0.11 API and isolated-wheel smoke test across the full CI matrix before merging.
+2. Build an independently reviewable synthetic corpus with pinned expected outcomes before external performance claims.
+3. Gather maintainer feedback on the API's report and error contracts before exposing stateful HTTP operations.
+4. Evaluate isolation and resource-control requirements separately from ordinary correctness features.
+5. Publish only after artifact review and explicit maintainer approval.
 
 ## v0.7 — portable stateful regression workflow
 

@@ -44,6 +44,7 @@ The longer-term research direction is an **evidence-first compatibility lab**: s
 | Reproduction | JSON reports retain the input and SHA-256 digest; `replay` re-runs a chosen finding with explicitly supplied commands |
 | Counterexample packs | Export CLI input findings and stateful HTTP workflows into separate portable packs; pin contracts and hashes before replay |
 | CI output | Human-readable summary, JSON evidence report, and JUnit XML with one testcase per tested input |
+| Public Python API | Versioned API v1 for command-line comparisons, compatibility contracts, and JSON/JUnit report helpers; documented and compatibility-tested |
 | Project quality | Standard-library tests, GitHub Actions CI, issue templates, MIT license and security/contribution policies |
 
 This is a narrow foundation by design. It does not yet analyze arbitrary binaries, reconstruct protocols, observe filesystem/network side effects, perform coverage-guided instrumentation, or safely execute untrusted code.
@@ -88,6 +89,26 @@ python -m twincheck replay --help
 ```
 
 There are no runtime third-party dependencies. The packaging backend is a build-time dependency.
+
+## Public Python API v1
+
+The documented Python API supports programmatic command-line comparisons, validated compatibility contracts, and report output. Its exported names are available from both the explicit `twincheck.api` module and the package root.
+
+```python
+import shlex
+import sys
+from twincheck import compare_commands, write_json_report
+
+report = compare_commands(
+    shlex.join([sys.executable, "reference.py"]),
+    shlex.join([sys.executable, "replacement.py"]),
+    cases=100,
+    seed=42,
+)
+write_json_report("reports/compatibility.json", report)
+```
+
+The [Python API v1 reference](docs/python-api.md) lists the supported names and compatibility policy. `API_VERSION` tracks breaking changes to those exports. Stateful HTTP comparison and exploration remain available through the CLI, but are not yet exposed as Python API v1 functions. This is not a sandbox; run only trusted commands.
 
 ## How a comparison works
 
@@ -446,7 +467,7 @@ See [Threat Model](docs/threat-model.md), [Architecture](docs/architecture.md), 
 
 ## Project direction
 
-TwinCheck is being built around one product promise: a compatibility claim should be backed by observable executions, a clearly stated comparison policy, and a counterexample another developer can reproduce. Its differentiator should be evidence quality and a dependable regression workflow, not the number of mutation operators. The v0.9 milestone added a hash-pinned corpus with a single verifier for expected findings, minimization, regression-pack replay and tamper detection. The v0.10 alpha adds opt-in observation-driven generation: static exploration remains the default, while adaptive mode can produce bounded paired mutations after new response branches or transitions. A fixed-fixture comparison script reports the same case budget and seed for both modes. This remains a heuristic, not general state-machine learning, and response-shape novelty is not source-code coverage. See [adaptive exploration](docs/adaptive-stateful-exploration-v1.md), the [project plan](docs/project-plan.md) and [roadmap](docs/roadmap.md).
+TwinCheck is being built around one product promise: a compatibility claim should be backed by observable executions, a clearly stated comparison policy, and a counterexample another developer can reproduce. Its differentiator should be evidence quality and a dependable regression workflow, not the number of mutation operators. The v0.9 milestone added a hash-pinned corpus with a verifier for expected findings, minimization, regression-pack replay and tamper detection. The v0.10 alpha adds opt-in observation-driven generation while keeping static exploration as the default. The v0.11 alpha introduces a documented Python API v1 for core command-line comparisons, compatibility contracts and report helpers. Adaptive feedback remains a bounded heuristic, not general state-machine learning, and response-shape novelty is not source-code coverage. See [adaptive exploration](docs/adaptive-stateful-exploration-v1.md), the [Python API v1 reference](docs/python-api.md), the [project plan](docs/project-plan.md) and [roadmap](docs/roadmap.md).
 
 ### Roadmap summary
 
@@ -461,6 +482,7 @@ TwinCheck is being built around one product promise: a compatibility claim shoul
 | v0.7 | Portable stateful HTTP regression packs, integrity checks, pinned reset and contract, CLI replay | Implemented on the preceding development baseline; release status is separate from source control |
 | v0.8 | Reset-health verification, dependency metadata, secret-redaction regression tests, and a reproducible synthetic corpus | Merged as `0.8.0a1` alpha; Python 3.11/3.12/3.13 CI matrix green |
 | v0.9 | Multi-failure stateful corpus, safe difference explanations, schema validation, minimization and pack replay | Merged as `0.9.0a1` alpha; Linux/Windows CI matrix green |
+| v0.11 | Public Python API v1 for command comparisons, contracts and report output, with compatibility tests | `0.11.0a1` alpha; API smoke test runs against the built wheel |
 | v0.10 | Opt-in observation-driven candidate generation, fixed-fixture mode comparison and deterministic adaptive evidence | `0.10.0a1` alpha; Linux/Windows matrix and comparison gate included |
 | Later | Isolation and richer observability | Planned, security-sensitive |
 | v1.0 | Stable APIs, benchmark corpus and trusted compatibility workflow | Not released; compatibility policy and package validation are being established |
