@@ -111,7 +111,8 @@ def _check_fixture_hashes(manifest: dict[str, Any]) -> None:
         path = ROOT / relative
         if not path.is_file() or path.is_symlink():
             raise CorpusFailure(f"pinned fixture is missing or not a regular file: {relative}")
-        actual = _sha256(path.read_bytes())
+        # Normalize checkout line endings so this pin is stable on Windows and POSIX.
+        actual = _sha256(path.read_text(encoding="utf-8").replace("\r\n", "\n").encode("utf-8"))
         if actual != expected:
             raise CorpusFailure(f"fixture SHA-256 drift for {relative}: expected {expected}, got {actual}")
 
