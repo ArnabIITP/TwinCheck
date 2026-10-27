@@ -43,11 +43,11 @@ class PublicAPITests(unittest.TestCase):
             reference_script = root / "reference.py"
             candidate_script = root / "candidate.py"
             reference_script.write_text(
-                "import sys\\nsys.stdout.write(sys.stdin.read().upper())\\n",
+                "import sys\nsys.stdout.write(sys.stdin.read().upper())\n",
                 encoding="utf-8",
             )
             candidate_script.write_text(
-                "import sys\\nsys.stdout.write(sys.stdin.read().lower())\\n",
+                "import sys\nsys.stdout.write(sys.stdin.read().lower())\n",
                 encoding="utf-8",
             )
             reference_command = shlex.join([sys.executable, str(reference_script)])
