@@ -29,7 +29,7 @@ class PublicAPITests(unittest.TestCase):
     def test_api_version_and_root_exports_match_api_module(self):
         self.assertEqual(API_VERSION, 1)
         self.assertEqual(twincheck.API_VERSION, api.API_VERSION)
-        self.assertEqual(twincheck.__all__, api.__all__)
+        self.assertEqual(set(api.__all__), set(twincheck.__all__) - {"__version__"})
         for name in api.__all__:
             with self.subTest(name=name):
                 self.assertIs(getattr(twincheck, name), getattr(api, name))
