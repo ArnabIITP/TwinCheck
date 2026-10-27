@@ -12,8 +12,6 @@ This remains an alpha. The corpus is a deterministic correctness fixture, not a 
 
 ## 0.8.0a1 - Verifiable stateful regression workflows (alpha)
 
-## 0.8.0a1 - Verifiable stateful regression workflows (alpha)
-
 - Add an optional versioned reset-health contract to stateful sequences. After every configured reset, TwinCheck makes a separate read-only GET request and checks explicit scalar JSON Pointer assertions on both local targets before running the tested workflow.
 - Record whether reset checking was status-only or assertion-verified. Health summaries retain assertion paths and pass/fail metadata, not observed response values.
 - Add explicit `depends_on` metadata to stateful steps and reject dependencies that are duplicated, implicit, unknown, or ordered after their consumer.
