@@ -7,5 +7,16 @@
       "method": "POST",
       "path": "/__test/reset"
     }
-  ]
+  ],
+  "health": {
+    "schema_version": 1,
+    "method": "GET",
+    "path": "/__test/state",
+    "assertions": [
+      {
+        "pointer": "/body/item_count",
+        "equals": 0
+      }
+    ]
+  }
 }
