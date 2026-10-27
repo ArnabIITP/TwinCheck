@@ -1,0 +1,19 @@
+name: One-time v0.8 branch cleanup
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  delete-merged-development-branch:
+    if: github.event.head_commit.message == 'chore: temporary v0.8 branch cleanup'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete the already-merged development branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: gh api --method DELETE "repos/${REPOSITORY}/git/refs/heads/feat/v0.8-reliability"
