@@ -19,6 +19,7 @@ from twincheck.stateful_http import (
 )
 from twincheck.stateful_packs import export_stateful_sequence_pack
 from twincheck.stateful_explore import (
+    _generate_adaptive_variants,
     _select_next_variant,
     _variant_mutation_features,
     generate_sequence_variants,
@@ -65,7 +66,12 @@ class _CartHandler(http.server.BaseHTTPRequestHandler):
                 return
             self.server.items.append(body)
             self.server.cookie_protected_step_seen = True
-            self._send(200, {"added": True, "count": len(self.server.items)})
+            compound_defect = (
+                getattr(self.server, "compound_defect", False)
+                and body.get("sku") == ""
+                and body.get("quantity") == 0
+            )
+            self._send(200, {"added": not compound_defect, "count": len(self.server.items)})
             return
         self._send(404, {"error": "not found"})
 
@@ -99,6 +105,7 @@ def _start_cart_server(cart_id, delta=0):
     server.ignore_reset = False
     server.cookie_protected_step_seen = False
     server.increment_on_get = False
+    server.compound_defect = False
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     return server, thread
@@ -539,6 +546,75 @@ class StatefulHttpTests(unittest.TestCase):
             [item["input_sha256"] for item in report["executions"]],
             [item["input_sha256"] for item in repeated["executions"]],
         )
+
+
+    def test_adaptive_mode_generates_compound_candidate_from_early_feedback(self):
+        """The second-order defect is outside the static single-field mutation pool."""
+        self.candidate.compound_defect = True
+        sequence = _sequence()
+        reset_sequence = {
+            "schema_version": 1,
+            "name": "reset-cart-state",
+            "steps": [{"name": "reset", "method": "POST", "path": "/__test/reset"}],
+        }
+        sequence_raw = json.dumps(sequence, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        reset_raw = json.dumps(reset_sequence, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        kwargs = {
+            "reference_url": f"http://127.0.0.1:{self.reference.server_port}",
+            "candidate_url": f"http://127.0.0.1:{self.candidate.server_port}",
+            "sequence": sequence,
+            "sequence_sha256": hashlib.sha256(sequence_raw).hexdigest(),
+            "reset_sequence": reset_sequence,
+            "reset_sequence_sha256": hashlib.sha256(reset_raw).hexdigest(),
+            "seed": 19,
+            "max_cases": 2,
+            "contract": _contract(),
+        }
+        static_report = run_http_sequence_exploration(**kwargs, mode="static")
+        self.assertEqual(static_report["cases_executed"], 2)
+        self.assertEqual(static_report["summary"]["differences_found"], 0)
+
+        adaptive_report = run_http_sequence_exploration(
+            **kwargs, mode="adaptive", max_adaptive_candidates=1
+        )
+        self.assertEqual(adaptive_report["cases_executed"], 2)
+        self.assertEqual(adaptive_report["exploration"]["algorithm_version"], 3)
+        self.assertEqual(adaptive_report["exploration"]["adaptive_generated_count"], 1)
+        self.assertEqual(adaptive_report["exploration"]["adaptive_executed_count"], 1)
+        self.assertGreater(adaptive_report["summary"]["differences_found"], 0)
+        self.assertEqual(adaptive_report["executions"][1]["mutation_type"], "adaptive_pair_boundary")
+        self.assertIn("response-branch at create-cart", adaptive_report["executions"][1]["generation_reason"])
+        self.assertIn("add-item", adaptive_report["executions"][1]["generation_reason"])
+
+        repeated = run_http_sequence_exploration(
+            **kwargs, mode="adaptive", max_adaptive_candidates=1
+        )
+        self.assertEqual(
+            [item["input_sha256"] for item in adaptive_report["executions"]],
+            [item["input_sha256"] for item in repeated["executions"]],
+        )
+        self.assertEqual(
+            [item["generation_reason"] for item in adaptive_report["exploration"]["adaptive_generated_candidates"]],
+            [item["generation_reason"] for item in repeated["exploration"]["adaptive_generated_candidates"]],
+        )
+
+    def test_adaptive_generation_redacts_sensitive_field_names_in_reason_metadata(self):
+        sequence = _sequence()
+        sequence["steps"][1]["body"] = {"api_token": "do-not-log", "quantity": 2}
+        variants = _generate_adaptive_variants(
+            sequence,
+            [{"step_name": "create-cart", "kind": "response-branch"}],
+            seen_step_digests=set(),
+            max_new_cases=1,
+        )
+        self.assertEqual(len(variants), 1)
+        metadata = json.dumps({
+            "description": variants[0].description,
+            "generation_reason": variants[0].generation_reason,
+        })
+        self.assertNotIn("api_token", metadata)
+        self.assertNotIn("do-not-log", metadata)
+        self.assertIn("<redacted-key>", metadata)
 
     def test_explore_cli_writes_a_replayable_exploration_report(self):
         self.candidate.total_delta = 1
