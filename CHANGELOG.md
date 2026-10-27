@@ -10,6 +10,7 @@
 - Document that the heuristic is not general state-machine learning and that response-shape novelty is not source-code coverage.
 - Add distribution validation that builds a wheel and source archive, checks metadata, and installs the wheel in an isolated environment outside the checkout.
 - Add a manual release-candidate workflow and an explicit pre-1.0 CLI/schema/Python API compatibility policy; the workflow does not publish to PyPI.
+- Use SPDX-style PEP 639 license metadata and include the license file explicitly in built distributions.
 
 This remains an alpha. The comparison is fixture-only and is not a general performance or superiority claim. An in-flight workflow can finish after the wall-clock deadline, bounded by the remaining per-request timeout and sequence limits.
 
