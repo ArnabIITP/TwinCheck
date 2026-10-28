@@ -54,3 +54,19 @@ python benchmarks/score_exploration_protocol.py --report reports/exploration-pro
 ```
 
 Ground truth is assigned at the scenario level: if either pinned mode expectation says a scenario contains a defect, it is a seeded defect for both modes. Thus a defect missed by static exploration counts as a false negative instead of being reclassified as a clean control. Only scenarios where both modes are expected to report no finding count as clean controls. The scorecard refuses failed or incomplete protocol reports. Its detection, false-positive and precision figures describe only this tiny pinned synthetic corpus and are not estimates of real-world effectiveness.
+
+
+## Independent inventory/reservation domain v1
+
+The exploration protocol now has a second API domain, separate from the cart fixture: an inventory and reservation service with reset health checks, stock accounting, reservation records and two seeded defect types. The pinned scenarios cover a clean control, a reservation-status compatibility drift, and a service that accepts a reservation larger than available stock.
+
+Run it from the repository root after installing the test extra:
+
+```bash
+python -m pip install -e ".[test]"
+python benchmarks/domain-corpus-v1/run_domain_protocol.py --rounds 2 --max-run-seconds 10 --output reports/inventory-domain-protocol-v1.json
+```
+
+The runner checks SHA-256 pins for its service, sequences, reset workflow and compatibility contract; validates sequences and contracts with TwinCheck's production loaders; uses explicit reset-health assertions before each workflow; and requires the expected clean/defect outcome in both static and adaptive modes. CI runs this protocol on the existing four-job matrix and verifies the fixtures are included in the source archive.
+
+This is an additional deterministic synthetic domain, not external validation. It does not test concurrent reservations, database transactions, distributed inventory, authentication, or real network failures. The detection figures in its report are descriptive of the pinned scenarios and are not estimates of real-world defect-detection rates.
