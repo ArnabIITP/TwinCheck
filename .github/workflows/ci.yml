@@ -56,6 +56,12 @@ jobs:
           --rounds 2
           --max-run-seconds 20
           --output "${{ runner.temp }}/twincheck-stateful-corpus-v2/exploration-protocol-v1.json"
+      - name: Run independent inventory-domain exploration protocol
+        run: >-
+          python benchmarks/domain-corpus-v1/run_domain_protocol.py
+          --rounds 2
+          --max-run-seconds 10
+          --output "${{ runner.temp }}/twincheck-stateful-corpus-v2/inventory-domain-protocol-v1.json"
       - name: Score paired exploration evidence
         run: >-
           python benchmarks/score_exploration_protocol.py
