@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "name": "inventory-over-capacity-v1",
+  "steps": [
+    {"name": "reserve-over-capacity", "method": "POST", "path": "/reservations", "body": {"sku": "sku-1", "quantity": 6}}
+  ]
+}
