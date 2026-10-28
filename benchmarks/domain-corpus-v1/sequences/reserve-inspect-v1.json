@@ -2,14 +2,8 @@
   "schema_version": 1,
   "name": "inventory-reserve-inspect-v1",
   "steps": [
-    {
-      "name": "reserve-stock",
-      "method": "POST",
-      "path": "/reservations",
-      "body": {"sku": "sku-1", "quantity": 2},
-      "capture": {"reservation_id": "/body/id"}
-    },
+    {"name": "reserve-stock", "method": "POST", "path": "/reservations", "body": {"sku": "sku-1", "quantity": 2}},
     {"name": "inspect-inventory", "method": "GET", "path": "/inventory/sku-1"},
-    {"name": "inspect-reservation", "method": "GET", "path": "/reservations/{{reservation_id}}"}
+    {"name": "inspect-reservation", "method": "GET", "path": "/reservations/1"}
   ]
 }
