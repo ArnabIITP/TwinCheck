@@ -108,6 +108,17 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Produce a per-mode confusion-matrix scorecard using scenario-level ground truth, with seeded defects missed by a mode counted as false negatives
 - [x] Reject failed or incomplete protocol evidence and run scorecard tests and generation in CI
 
+
+## v0.13 — independent API-domain validation
+
+- [x] Add an inventory/reservation API fixture independent of the cart domain
+- [x] Pin service, workflow, reset, and compatibility-contract fixtures with SHA-256 digests
+- [x] Cover a clean control, reservation-status drift, and over-capacity acceptance defect
+- [x] Run expected-outcome checks in static and adaptive modes under matched per-case budgets
+- [x] Require reset-health assertions before tested workflows and verify the corpus in CI
+- [x] Include the new benchmark fixtures in source-distribution validation
+- [ ] Expand beyond deterministic in-memory APIs and seek independent external validation before making general effectiveness claims
+
 ## Release readiness
 
 - [x] Document the alpha compatibility promise and distinguish the CLI, versioned file schemas and internal Python modules
