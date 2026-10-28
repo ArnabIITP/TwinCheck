@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "name": "inventory-reset-v1",
+  "steps": [{"name": "reset", "method": "POST", "path": "/__test/reset"}],
+  "health": {
+    "schema_version": 1,
+    "method": "GET",
+    "path": "/__test/state",
+    "assertions": [
+      {"pointer": "/body/available", "equals": 5},
+      {"pointer": "/body/reservation_count", "equals": 0}
+    ]
+  }
+}
