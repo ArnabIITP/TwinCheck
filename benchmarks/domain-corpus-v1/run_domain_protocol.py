@@ -97,7 +97,15 @@ def _run_once(manifest: dict[str, Any], case: dict[str, Any], mode: str, seed: i
     finding = report["summary"]["differences_found"] > 0
     expected = case["expected"][mode]["finding"]
     if finding != expected:
-        raise DomainProtocolError(f"{case['id']}/{mode}/seed={seed}/round={round_index}: expected finding={expected}, observed {finding}")
+        evidence = []
+        for item in report.get("findings", []):
+            for step in item.get("step_results", []):
+                if isinstance(step, dict) and step.get("differences"):
+                    evidence.append({"step": step.get("name"), "differences": step.get("differences")})
+        raise DomainProtocolError(
+            f"{case['id']}/{mode}/seed={seed}/round={round_index}: expected finding={expected}, "
+            f"observed {finding}, finding_count={report['summary']['differences_found']}, evidence={evidence}"
+        )
     return {
         "case_id": case["id"], "mode": mode, "seed": seed, "round": round_index,
         "expected_finding": expected, "finding": finding,
