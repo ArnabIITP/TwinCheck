@@ -101,7 +101,7 @@ def _run_once(manifest: dict[str, Any], case: dict[str, Any], mode: str, seed: i
         for item in report.get("findings", []):
             for step in item.get("step_results", []):
                 if isinstance(step, dict) and step.get("differences"):
-                    evidence.append({"step": step.get("name"), "differences": step.get("differences")})
+                    evidence.append({"step": step.get("name"), "differences": step.get("differences"), "reference": step.get("reference"), "candidate": step.get("candidate")})
         raise DomainProtocolError(
             f"{case['id']}/{mode}/seed={seed}/round={round_index}: expected finding={expected}, "
             f"observed {finding}, finding_count={report['summary']['differences_found']}, evidence={evidence}"
