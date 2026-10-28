@@ -7,7 +7,7 @@
   "max_output_bytes": 100000,
   "fixture_hashes": {
     "benchmarks/domain-corpus-v1/service.py": "c530e2dcac609b923d9c49cdc8687309b963fef0119fff7c4daaf01e7b4afb55",
-    "benchmarks/domain-corpus-v1/sequences/reserve-inspect-v1.json": "5707d823d7a5182469b0a3bb63c1117f87bf003e7ec3b87afb32ba9ba8f5a8c2",
+    "benchmarks/domain-corpus-v1/sequences/reserve-inspect-v1.json": "16cb37a1af30c43dc13244454106a651e0ef578574256ba3b95b5b4b80ffaf4d",
     "benchmarks/domain-corpus-v1/sequences/reset-v1.json": "b92fbe7bea4b9780e2744b4e119045e92890197bcd38e189c3bc1c75ee718a98",
     "benchmarks/domain-corpus-v1/sequences/over-capacity-v1.json": "a5134aaf66a4e44f95d9919171d83107898209ec305bfb21a8038ec846246d84",
     "benchmarks/domain-corpus-v1/contracts/inventory-compatibility-v1.json": "6a811bb89f02e0a42ecebc8c5a9b778dd0eb75d0afa84121260ee181c1eeb77c"
