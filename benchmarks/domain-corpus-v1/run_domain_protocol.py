@@ -132,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
             per_mode[mode] = {
                 "runs": len(rows),
                 "expected_outcomes_met": sum(row["expectation_met"] for row in rows),
-                "seeded_defect_detection_rate": sum(row["finding"] for row in defect_runs) / len(defect_runs) if defect_runs else None,
+                "seeded_defect_detection_rate": sum(row["finding"] and row["expected_finding"] for row in defect_runs) / len(defect_runs) if defect_runs else None,
                 "false_positive_runs": sum(row["finding"] and not row["expected_finding"] for row in rows),
                 "median_wall_seconds": round(statistics.median(row["wall_seconds"] for row in rows), 6) if rows else None,
             }
