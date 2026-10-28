@@ -105,6 +105,8 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [x] Record sanitized schedule fingerprints, expected outcomes, paired outcomes, seeds, timing and repeatability
 - [x] Require repeated runs to preserve the same mutation schedule and outcome
 - [x] Run the protocol in the four-job CI matrix and require its files in verified source distributions
+- [x] Produce a per-mode confusion-matrix scorecard using scenario-level ground truth, with seeded defects missed by a mode counted as false negatives
+- [x] Reject failed or incomplete protocol evidence and run scorecard tests and generation in CI
 
 ## Release readiness
 
