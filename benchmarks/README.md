@@ -12,7 +12,6 @@ The benchmark compares two identity commands, repeats each round, and prints JSO
 
 When sharing a result, include the exact command, commit SHA, operating system/version, Python version, case count, seed, round count, and whether the machine was otherwise idle. Do not put a number in the main README without a reproducible method and multiple comparable runs. No benchmark result is checked into this repository as a universal performance claim.
 
-
 ## Stateful regression corpus v2
 
 The stateful corpus is a deterministic correctness gate, not a throughput benchmark or a comparison with other fuzzers. It includes five fixed scenarios: a volatile-ID control, response-value drift, a stateful read-ordering defect, an idempotency/retry defect, and a reset-health guard that must block a stale-state target.
@@ -44,3 +43,14 @@ Before invoking the targets, the runner validates the manifest against [its vers
 Static and adaptive runs use the same per-case candidate budget and pinned seeds. The report includes each run's expected-outcome status, executed case count, named difference steps, mutation-schedule fingerprint, response-branch/transition counts, elapsed time, and paired results. Repeated runs must retain the same schedule and outcome. Sensitive request/response bodies are not copied into the summary. CI executes this protocol on Linux/Python 3.11–3.13 and Windows/Python 3.11 and stores the result alongside the existing stateful corpus evidence.
 
 The paired-field interaction is a deliberately small test of a known adaptive candidate, not evidence that adaptive mode is generally more effective. The suite exercises one synthetic cart API; it does not cover production APIs, concurrency, distributed state, or every mutation strategy. Reported timings include local server lifecycle overhead and are diagnostic only. Do not use these numbers as general performance or superiority claims.
+
+## Exploration scorecard v1
+
+The paired exploration protocol can be summarized into a confusion-matrix scorecard:
+
+```bash
+python benchmarks/run_exploration_protocol.py --rounds 2 --max-run-seconds 20 --output reports/exploration-protocol-v1.json
+python benchmarks/score_exploration_protocol.py --report reports/exploration-protocol-v1.json --output reports/exploration-scorecard-v1.json
+```
+
+Ground truth is assigned at the scenario level: if either pinned mode expectation says a scenario contains a defect, it is a seeded defect for both modes. Thus a defect missed by static exploration counts as a false negative instead of being reclassified as a clean control. Only scenarios where both modes are expected to report no finding count as clean controls. The scorecard refuses failed or incomplete protocol reports. Its detection, false-positive and precision figures describe only this tiny pinned synthetic corpus and are not estimates of real-world effectiveness.

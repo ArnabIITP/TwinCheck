@@ -56,6 +56,11 @@ jobs:
           --rounds 2
           --max-run-seconds 20
           --output "${{ runner.temp }}/twincheck-stateful-corpus-v2/exploration-protocol-v1.json"
+      - name: Score paired exploration evidence
+        run: >-
+          python benchmarks/score_exploration_protocol.py
+          --report "${{ runner.temp }}/twincheck-stateful-corpus-v2/exploration-protocol-v1.json"
+          --output "${{ runner.temp }}/twincheck-stateful-corpus-v2/exploration-scorecard-v1.json"
       - name: Build wheel and source archive
         run: |
           python -m pip install --upgrade build twine

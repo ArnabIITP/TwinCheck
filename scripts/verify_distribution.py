@@ -82,6 +82,8 @@ def main() -> int:
         "benchmarks/exploration-corpus-v1/sequences/reset-v1.json",
         "benchmarks/exploration-corpus-v1/contracts/cart-compatibility-v1.json",
         "benchmarks/run_exploration_protocol.py",
+        "benchmarks/score_exploration_protocol.py",
+        "tests/test_benchmark_scorecard.py",
         "examples/README.md",
         "tests/test_stateful_http.py",
         "tests/test_public_api.py",
