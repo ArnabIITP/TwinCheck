@@ -6,14 +6,14 @@
   "repeat": 1,
   "max_output_bytes": 100000,
   "fixture_hashes": {
-    "benchmarks/exploration-corpus-v2.schema.json": "444bcca21dc415122e38c042935da06ed8a98918",
+    "benchmarks/exploration-corpus-v2.schema.json": "ea053403c78ad51df017b61348cebdd35659f0de",
     "benchmarks/exploration-corpus-v2/service.py": "1c0344befb3b6fcacc0c07cfa58ffb7233aa5eb9",
     "benchmarks/exploration-corpus-v2/sequences/booking-session-reserve-read-v1.json": "e3e975ca598a46085cd8311c6eefcc57f11c1b26",
     "benchmarks/exploration-corpus-v2/sequences/reset-v1.json": "2001fe480ee214ec358b2fc1ae80ef646cbaff9c",
     "benchmarks/exploration-corpus-v2/contracts/booking-compatibility-v1.json": "60a1cf226396dc23d321235eec2964a2dc18cb5e",
     "docs/stateful-http-sequence-v1.schema.json": "a9f0ec7ee9574e2f8b164062f8a3efe5ad9c314f",
     "docs/compatibility-contract-v1.schema.json": "c5237c56fe4ca888d420d1ba7adfc7f805f94a04",
-    "benchmarks/run_multi_domain_protocol.py": "86491644c7e6750a4e9dd7b27439bdf02b0565ff"
+    "benchmarks/run_multi_domain_protocol.py": "afe7a1f41de40245f6751d3a78243fab15dff878"
   },
   "cases": [
     {
