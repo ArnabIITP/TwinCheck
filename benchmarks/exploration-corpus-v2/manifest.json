@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "name": "TwinCheck Booking API Corpus v1",
+  "description": "A second synthetic API domain focused on reservation creation, capacity state, status codes and fee totals.",
+  "timeout_seconds": 3,
+  "repeat": 1,
+  "max_output_bytes": 100000,
+  "fixture_hashes": {
+    "benchmarks/exploration-corpus-v2.schema.json": "2a94f4c5000d5517728dcbd944b00248f88be71ded37b6da4e6b4f115853003e",
+    "benchmarks/exploration-corpus-v2/service.py": "3be5fdf5c1557de7b0699e39ac55297193b3d01dffb08f47074220e1826ca77c",
+    "benchmarks/exploration-corpus-v2/sequences/booking-session-reserve-read-v1.json": "ba260ac6ef8a722fbfa81472417d652b5edfb09a069e8dc2fe5af853e24c8371",
+    "benchmarks/exploration-corpus-v2/sequences/reset-v1.json": "020cf2286f5782f240a7ac44efa0dd0034f47c5b7f39df376df80f470135b416",
+    "benchmarks/exploration-corpus-v2/contracts/booking-compatibility-v1.json": "eed3bea05ddd996e3af2ebfdb70e0c03bcddcebc2d6a4e2e6d0f656d9d8c2cdb",
+    "docs/stateful-http-sequence-v1.schema.json": "a262750b0b0c11e30ede97e052b242bf3a6450c2417724bc7d689be00a984f29",
+    "docs/compatibility-contract-v1.schema.json": "fbb0e827c81339a560d89ae82a928b01583c6166899776d238e42d71e1ff8ae4",
+    "benchmarks/run_multi_domain_protocol.py": "5014e34ea16b4f48d9683da1443b5d7d967f4a25dead13ff69304b9dd667cd45"
+  },
+  "cases": [
+    {
+      "id": "clean-control",
+      "sequence": "sequences/booking-session-reserve-read-v1.json",
+      "reset_sequence": "sequences/reset-v1.json",
+      "contract": "contracts/booking-compatibility-v1.json",
+      "reference": {
+        "fee_delta": 0,
+        "capacity": 2
+      },
+      "candidate": {
+        "fee_delta": 0,
+        "capacity": 2
+      },
+      "expected_finding": false
+    },
+    {
+      "id": "fee-total-drift",
+      "sequence": "sequences/booking-session-reserve-read-v1.json",
+      "reset_sequence": "sequences/reset-v1.json",
+      "contract": "contracts/booking-compatibility-v1.json",
+      "reference": {
+        "fee_delta": 0,
+        "capacity": 2
+      },
+      "candidate": {
+        "fee_delta": 1,
+        "capacity": 2
+      },
+      "expected_finding": true
+    },
+    {
+      "id": "capacity-state-drift",
+      "sequence": "sequences/booking-session-reserve-read-v1.json",
+      "reset_sequence": "sequences/reset-v1.json",
+      "contract": "contracts/booking-compatibility-v1.json",
+      "reference": {
+        "fee_delta": 0,
+        "capacity": 2
+      },
+      "candidate": {
+        "fee_delta": 0,
+        "capacity": 0
+      },
+      "expected_finding": true
+    }
+  ],
+  "limitations": [
+    "All services are deterministic, local, in-memory synthetic fixtures.",
+    "The corpus tests one booking workflow and does not model concurrency, persistence, authentication expiry, payment systems, or real network faults.",
+    "Metrics from this corpus must not be presented as real-world detection rates."
+  ]
+}
