@@ -54,3 +54,17 @@ python benchmarks/score_exploration_protocol.py --report reports/exploration-pro
 ```
 
 Ground truth is assigned at the scenario level: if either pinned mode expectation says a scenario contains a defect, it is a seeded defect for both modes. Thus a defect missed by static exploration counts as a false negative instead of being reclassified as a clean control. Only scenarios where both modes are expected to report no finding count as clean controls. The scorecard refuses failed or incomplete protocol reports. Its detection, false-positive and precision figures describe only this tiny pinned synthetic corpus and are not estimates of real-world effectiveness.
+
+
+## Second-domain booking API corpus v1
+
+The booking corpus is an independent synthetic domain, separate from the cart exploration corpus. It checks a session-based reservation workflow with three pinned scenarios: an equivalent clean control, a reservation-fee total drift, and a capacity-state mismatch. The manifest pins fixture files using Git blob SHA-1 identifiers, validates against a versioned JSON Schema, and validates request sequences/contracts with TwinCheck's production loaders.
+
+Run it after installing the test extra:
+
+```bash
+python -m pip install -e ".[test]"
+python benchmarks/run_multi_domain_protocol.py --output reports/booking-api-corpus-v1.json
+```
+
+The report records per-case expected/observed findings, execution duration, step-level differences, confusion-matrix counts, and detection/false-positive/precision metrics. CI runs the corpus on each supported matrix entry and includes the runner and fixtures in the verified source archive. The corpus is deliberately small: it is evidence of cross-domain testability, not evidence of real-world effectiveness or production API coverage.
