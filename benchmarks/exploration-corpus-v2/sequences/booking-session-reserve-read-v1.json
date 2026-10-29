@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "name": "booking-session-reserve-read",
+  "steps": [
+    {"name":"create-session","method":"POST","path":"/sessions","capture":{"session_id":"/body/session_id"}},
+    {"name":"create-reservation","method":"POST","path":"/reservations","body":{"room_type":"standard","nights":2}},
+    {"name":"read-reservations","method":"GET","path":"/reservations"}
+  ]
+}
