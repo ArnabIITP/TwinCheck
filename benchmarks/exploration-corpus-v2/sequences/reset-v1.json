@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "name": "booking-reset",
+  "steps": [{"name":"reset","method":"POST","path":"/__test/reset"}]
+}
