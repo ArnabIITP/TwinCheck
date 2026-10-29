@@ -23,7 +23,9 @@ def read_json(path: Path) -> Any:
         raise CorpusError(f"cannot read {path}: {exc}") from exc
 
 def normalized_sha(path: Path) -> str:
-    return hashlib.sha256(path.read_text(encoding="utf-8").replace("\r\n", "\n").encode("utf-8")).hexdigest()
+    data = path.read_bytes()
+    header = f"blob {len(data)}\\0".encode("ascii")
+    return hashlib.sha1(header + data).hexdigest()
 
 def checked_path(relative: str) -> Path:
     path = (ROOT / relative).resolve()
