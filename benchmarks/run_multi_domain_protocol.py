@@ -95,7 +95,7 @@ def main() -> int:
         for relative, expected in sorted(pins.items()):
             path = checked_path(relative)
             actual = normalized_sha(path)
-            if actual != expected: drift.append(f"{relative}: expected {expected}, got {actual}")
+            if actual != expected: drift.append(f"{relative}: expected Git blob SHA {expected}, got {actual}")
         if drift: raise CorpusError("fixture hash mismatch:\n  " + "\n  ".join(drift))
         sequence_schema = Draft202012Validator(read_json(ROOT / "docs/stateful-http-sequence-v1.schema.json"))
         contract_schema = Draft202012Validator(read_json(ROOT / "docs/compatibility-contract-v1.schema.json"))
@@ -116,7 +116,7 @@ def main() -> int:
         evidence = {
             "schema_version": 1, "protocol": "TwinCheck second-domain booking corpus v1",
             "passed": passed, "scope": "small synthetic booking API only; not a real-world effectiveness estimate",
-            "fixture_hashes": pins, "results": results,
+            "fixture_git_blob_sha1": pins, "results": results,
             "metrics": {"true_positives": tp, "false_positives": fp, "true_negatives": tn, "false_negatives": fn,
                 "detection_rate": tp / (tp + fn) if tp + fn else None,
                 "false_positive_rate": fp / (fp + tn) if fp + tn else None,
