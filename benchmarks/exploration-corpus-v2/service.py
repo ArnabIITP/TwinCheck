@@ -29,7 +29,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.server.capacity = self.server.initial_capacity
             self._send(200, {"reset": True}); return
         if path == "/sessions":
-            self._send(201, {"session_id": self.server.service_id}, True); return
+            self._send(201, {"session_id": "booking-session-v1"}, True); return
         if path == "/reservations":
             if not self._auth():
                 self._send(401, {"error": "missing session"}); return
