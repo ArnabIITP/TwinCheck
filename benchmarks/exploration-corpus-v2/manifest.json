@@ -7,7 +7,7 @@
   "max_output_bytes": 100000,
   "fixture_hashes": {
     "benchmarks/exploration-corpus-v2.schema.json": "ea053403c78ad51df017b61348cebdd35659f0de",
-    "benchmarks/exploration-corpus-v2/service.py": "1c0344befb3b6fcacc0c07cfa58ffb7233aa5eb9",
+    "benchmarks/exploration-corpus-v2/service.py": "eec90a841b16836cadf09c6ebf7e45faf3b80058",
     "benchmarks/exploration-corpus-v2/sequences/booking-session-reserve-read-v1.json": "e3e975ca598a46085cd8311c6eefcc57f11c1b26",
     "benchmarks/exploration-corpus-v2/sequences/reset-v1.json": "2001fe480ee214ec358b2fc1ae80ef646cbaff9c",
     "benchmarks/exploration-corpus-v2/contracts/booking-compatibility-v1.json": "60a1cf226396dc23d321235eec2964a2dc18cb5e",
