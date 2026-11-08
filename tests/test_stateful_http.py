@@ -281,8 +281,8 @@ class StatefulHttpTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "explicitly named earlier step"):
             validate_sequence(invalid)
 
-    def test_header_secret_is_absent_from_report_and_portable_pack(self):
-        secret = "twincheck-test-secret-9172"
+    def test_header_value_is_absent_from_report_and_portable_pack(self):
+        test_marker = "fixture-only-marker-9172"
         self.candidate.base_total_delta = 1
         self.candidate.total_delta = 1
         sequence = _sequence()
@@ -301,11 +301,11 @@ class StatefulHttpTests(unittest.TestCase):
             sequence_sha256=hashlib.sha256(source).hexdigest(),
             reset_sequence=reset_sequence,
             reset_sequence_sha256=hashlib.sha256(reset_source).hexdigest(),
-            request_headers=(("X-Test-Secret", secret),),
+            request_headers=(("X-Test-Secret", test_marker),),
             contract=_contract(),
         )
         self.assertGreater(report["summary"]["differences_found"], 0)
-        self.assertNotIn(secret, json.dumps(report))
+        self.assertNotIn(test_marker, json.dumps(report))
         self.assertIn("x-test-secret", report["http_adapter"]["request_header_names"])
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -318,7 +318,7 @@ class StatefulHttpTests(unittest.TestCase):
                 for file in pack_path.iterdir()
                 if file.is_file()
             )
-            self.assertNotIn(secret, pack_text)
+            self.assertNotIn(test_marker, pack_text)
 
     def test_difference_explanation_honors_ignored_sensitive_fields_without_values(self):
         contract = contract_from_dict({
