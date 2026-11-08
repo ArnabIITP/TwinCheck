@@ -22,4 +22,4 @@ JSON reports and replay artifacts can contain exact failing inputs and captured 
 
 ## Supported security controls
 
-The project uses GitHub Actions CI and is introducing automated secret, source-code, dependency, and repository-posture checks. These checks reduce risk but do not constitute a security certification or guarantee that every vulnerability or secret will be detected.
+The repository configures a full-history Gitleaks scan, CodeQL analysis, OpenSSF Scorecard, and weekly Dependabot updates. CodeQL and Scorecard reporting are enabled for the public-repository phase. These checks reduce risk but do not constitute a security certification or guarantee that every vulnerability or secret will be detected.
