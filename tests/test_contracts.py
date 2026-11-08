@@ -78,6 +78,15 @@ class ContractTests(unittest.TestCase):
             self.assertEqual(contract.name, "from-file")
             self.assertEqual(contract.stdout.mode, "json")
 
+    def test_load_contract_rejects_oversized_file_at_the_read_boundary(self):
+        from twincheck.contract import _MAX_CONTRACT_BYTES
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "oversized.json"
+            path.write_bytes(b" " * (_MAX_CONTRACT_BYTES + 1))
+            with self.assertRaisesRegex(ValueError, "exceeds 1 MiB"):
+                load_contract(path)
+
 
 if __name__ == "__main__":
     unittest.main()

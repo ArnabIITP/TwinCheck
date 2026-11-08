@@ -787,6 +787,15 @@ class StatefulHttpTests(unittest.TestCase):
             self.assertEqual(sequence, _sequence())
             self.assertEqual(digest, hashlib.sha256(exact_bytes).hexdigest())
 
+    def test_load_sequence_rejects_oversized_file_at_the_read_boundary(self):
+        from twincheck.stateful_http import _MAX_SEQUENCE_FILE_BYTES
+
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp) / "oversized.json"
+            source.write_bytes(b" " * (_MAX_SEQUENCE_FILE_BYTES + 1))
+            with self.assertRaisesRegex(ValueError, "exceeds 5 MiB"):
+                load_sequence(source)
+
 
 if __name__ == "__main__":
     unittest.main()

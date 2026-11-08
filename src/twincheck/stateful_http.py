@@ -38,7 +38,10 @@ _PLACEHOLDER_SENTINEL = "\u0000TWINCHECK_TEMPLATE_"
 def load_sequence(path: str | Path) -> tuple[dict[str, Any], str]:
     """Load a bounded stateful workflow JSON file and return its byte hash."""
     source_path = Path(path)
-    raw = source_path.read_bytes()
+    # Read at most the configured limit plus one byte. Checking after read_bytes()
+    # would allocate the entire attacker-controlled file before enforcing the cap.
+    with source_path.open("rb") as source:
+        raw = source.read(_MAX_SEQUENCE_FILE_BYTES + 1)
     if len(raw) > _MAX_SEQUENCE_FILE_BYTES:
         raise ValueError("stateful sequence file exceeds 5 MiB")
     digest = hashlib.sha256(raw).hexdigest()
