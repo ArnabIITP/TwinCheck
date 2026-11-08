@@ -16,11 +16,11 @@ jobs:
       contents: write
     steps:
       - name: Check out tagged source
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.ref }}
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
         with:
           python-version: "3.11"
       - name: Verify tag matches package version
@@ -46,7 +46,7 @@ jobs:
       - name: Verify package metadata, contents and isolated installation
         run: python scripts/verify_distribution.py --dist-dir dist
       - name: Create draft GitHub Release with verified artifacts
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
         with:
           draft: true
           generate_release_notes: true
