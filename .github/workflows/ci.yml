@@ -73,7 +73,7 @@ jobs:
         run: python scripts/verify_distribution.py --dist-dir "${{ runner.temp }}/twincheck-dist"
       - name: Upload verified release candidate
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: twincheck-release-candidate-${{ github.sha }}
           path: ${{ runner.temp }}/twincheck-dist
@@ -81,7 +81,7 @@ jobs:
           retention-days: 14
       - name: Upload synthetic corpus evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: twincheck-synthetic-evidence-${{ matrix.os }}-py${{ matrix.python-version }}
           path: ${{ runner.temp }}/twincheck-stateful-corpus-v2
