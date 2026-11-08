@@ -49,13 +49,7 @@ The output files contain:
 - `reports/demo.json`: machine-readable execution evidence and findings.
 - `reports/demo-junit.xml`: JUnit XML for test-report integrations.
 
-The reports directory is not created automatically in every workflow. Create it first if it does not exist:
-
-```bash
-mkdir -p reports
-```
-
-On Windows PowerShell:
+On Windows PowerShell, create the directory with:
 
 ```powershell
 New-Item -ItemType Directory -Force reports
