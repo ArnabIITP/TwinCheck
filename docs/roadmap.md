@@ -131,7 +131,8 @@ This roadmap describes an ambition, not a promise. Features should ship only whe
 - [ ] Optional container-backed isolation and platform-specific resource limits; security-sensitive
 - [ ] File-system and richer protocol observers with explicit scopes
 - [ ] Extend the public API to stateful HTTP comparison and exploration; separately preserve report-schema compatibility
-- [ ] Independent external review and a broader multi-domain benchmark corpus beyond the current synthetic cart fixture
+- [x] Add a second pinned synthetic HTTP domain (booking/reservations) with clean, fee-drift and capacity-state cases; validate and run it in CI
+- [ ] Independent external review and a broader benchmark corpus with more domains and independently authored expected outcomes
 
 ## Non-goals
 

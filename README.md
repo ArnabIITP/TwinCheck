@@ -90,6 +90,17 @@ python -m twincheck replay --help
 
 There are no runtime third-party dependencies. The packaging backend is a build-time dependency.
 
+## Multi-domain compatibility benchmark
+
+TwinCheck now has two independently defined synthetic HTTP domains: a cart workflow and a session-based booking/reservation workflow. The booking corpus exercises a clean control, fee-total drift and capacity-state mismatch, and emits a reproducible evidence report:
+
+```bash
+python -m pip install -e ".[test]"
+python benchmarks/run_multi_domain_protocol.py --output reports/booking-api-corpus-v1.json
+```
+
+Both corpora are synthetic and intentionally bounded. Passing them demonstrates behavior on those fixtures only, not production readiness or a general real-world detection rate. See the [benchmark protocol and limitations](benchmarks/README.md).
+
 ## Public Python API v1
 
 The documented Python API supports programmatic command-line comparisons, validated compatibility contracts, and report output. Its exported names are available from both the explicit `twincheck.api` module and the package root.
