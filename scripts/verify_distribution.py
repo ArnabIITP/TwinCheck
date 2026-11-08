@@ -65,6 +65,7 @@ def main() -> int:
         "README.md",
         "CHANGELOG.md",
         "CONTRIBUTING.md",
+        "CODE_OF_CONDUCT.md",
         "SECURITY.md",
         "LICENSE",
         "docs/release-process.md",
