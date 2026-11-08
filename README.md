@@ -13,7 +13,7 @@ Give TwinCheck a reference implementation and a candidate replacement. It runs b
 
 </div>
 
-> **Alpha software.** TwinCheck is actively developed and its CLI and file formats may evolve before 1.0. It is a testing tool, not a proof of program equivalence, a production monitoring system, or a security sandbox. PyPI publication is not available yet; installation instructions below use the source repository.
+> **Alpha software.** TwinCheck is actively developed and its CLI and file formats may evolve before 1.0. It is a testing tool, not a proof of program equivalence, a production monitoring system, or a security sandbox. The first PyPI alpha release is being prepared. Until it is published, use the source installation instructions below. After publication, install the pinned alpha with `python -m pip install twincheck==0.12.0a1`.
 
 ## Why TwinCheck?
 
