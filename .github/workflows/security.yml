@@ -41,9 +41,8 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: python
+          build-mode: none
           queries: security-extended
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
       - name: Analyze
         uses: github/codeql-action/analyze@v3
 
