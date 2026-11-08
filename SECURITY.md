@@ -1,15 +1,25 @@
 # Security Policy
 
-## Supported versions
+## Project status
 
-Security fixes are expected for the latest release. This is an early prototype and does not yet have a formal support window.
+TwinCheck is pre-1.0 alpha software. Security fixes are prioritized for the latest alpha release. No long-term support window is currently promised.
 
 ## Reporting a vulnerability
 
-Do not publish credentials, private data or exploit details in a public issue. Contact the repository maintainer privately through GitHub's security advisory feature if it is enabled; otherwise use a private contact channel listed on the maintainer's GitHub profile.
+Please do not publish credentials, private data, or exploit details in a public issue. Use GitHub's private vulnerability reporting / security advisory feature for this repository when available. If private reporting is unavailable, contact the maintainer through the private contact channel on the maintainer's GitHub profile. Please include the affected version or commit, impact, and a minimal reproduction that does not expose real secrets or customer data.
 
 ## Security boundaries
 
-TwinCheck is a developer testing tool, **not a sandbox**. It launches the configured commands with the current user's permissions. Only run trusted programs and corpus inputs. The initial version does not enforce CPU/memory limits, does not isolate file-system or network access, and captures process output without a hard byte limit. Do not expose a service that runs user-supplied TwinCheck commands.
+TwinCheck is a developer testing tool, **not a sandbox**. It launches configured target commands with the current user's permissions. Only run programs and workflows you trust and are authorized to test. TwinCheck does not isolate filesystem or network access, enforce CPU or memory quotas, or make untrusted executables safe.
 
-Command arguments are parsed and launched without a shell (`shell=False`), which avoids shell interpretation but does not make an arbitrary executable safe. A future sandbox should be designed and reviewed separately before TwinCheck is marketed for untrusted workloads.
+The CLI retains bounded stdout/stderr output and reports truncation, but this is not a substitute for disk quotas or OS-level resource isolation. A target can still perform arbitrary actions available to the user, write files, access the network, spawn processes, or consume resources outside TwinCheck's controls.
+
+The HTTP adapters are intended for local test services and restrict requested target origins to loopback addresses. This does not sandbox the service itself or prevent it from making outbound connections. Do not expose a service that accepts arbitrary user-supplied TwinCheck commands, workflows, or corpora.
+
+## Sensitive evidence
+
+JSON reports and replay artifacts can contain exact failing inputs and captured program or service output. Treat them as potentially sensitive. Do not commit or publish reports derived from production systems, customer data, credentials, or proprietary inputs without reviewing and sanitizing them. Request header values are intentionally excluded from HTTP evidence, but a service can echo sensitive values in its response.
+
+## Supported security controls
+
+The repository configures a full-history Gitleaks scan, CodeQL analysis, OpenSSF Scorecard, and weekly Dependabot updates. CodeQL and Scorecard reporting are enabled for the public-repository phase. These checks reduce risk but do not constitute a security certification or guarantee that every vulnerability or secret will be detected.
