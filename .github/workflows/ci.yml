@@ -26,9 +26,9 @@ jobs:
             python-version: "3.11"
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install project and schema-validation test extra
@@ -73,7 +73,7 @@ jobs:
         run: python scripts/verify_distribution.py --dist-dir "${{ runner.temp }}/twincheck-dist"
       - name: Upload verified release candidate
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: twincheck-release-candidate-${{ github.sha }}
           path: ${{ runner.temp }}/twincheck-dist
@@ -81,7 +81,7 @@ jobs:
           retention-days: 14
       - name: Upload synthetic corpus evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: twincheck-synthetic-evidence-${{ matrix.os }}-py${{ matrix.python-version }}
           path: ${{ runner.temp }}/twincheck-stateful-corpus-v2
