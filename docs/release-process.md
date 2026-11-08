@@ -32,6 +32,7 @@ The verifier checks that exactly one wheel and one source archive exist, runs `t
 
 - **CI** runs the test suite, synthetic regression protocols, and distribution verification on Linux/Python 3.11–3.13 and Windows/Python 3.11.
 - **Release candidate validation** is manually triggered. It builds and verifies a wheel and source archive, then uploads them as a 14-day artifact. It does not publish to PyPI or create a GitHub release.
+- **Prepare GitHub release** runs when a `v*` tag is pushed. It checks that the tag matches the package version, builds and verifies the wheel and source archive, and creates a draft GitHub Release with generated notes and both artifacts attached. A maintainer reviews and publishes the draft manually.
 - **PyPI publishing** is triggered only when a GitHub Release is published. It rebuilds and verifies the package from the release tag, checks that the tag matches the version in `pyproject.toml`, and uses PyPI Trusted Publishing through GitHub Actions OIDC. It does not use a long-lived PyPI API token.
 
 ## One-time PyPI and GitHub configuration
@@ -58,8 +59,8 @@ For each alpha release:
 5. Install the wheel in a clean environment and follow the public [quick-start guide](quickstart.md).
 6. Review the README, license, third-party notices, security boundaries, report schemas and compatibility policy.
 7. Confirm no reports, credentials, customer data or private evidence are included in the artifacts.
-8. Create an annotated tag named `vVERSION` pointing to the reviewed commit and create a GitHub Release with matching notes.
-9. Publish the GitHub Release only after the configured `pypi` environment approval and Trusted Publisher setup are ready.
+8. Create an annotated tag named `vVERSION` pointing to the reviewed commit. The tag workflow prepares a draft GitHub Release with verified wheel and source artifacts.
+9. Review the generated notes and attached artifacts, then publish the GitHub Release only after the configured `pypi` environment approval and Trusted Publisher setup are ready.
 10. Verify the PyPI project page and install the exact version from PyPI in a clean environment. Check the installed CLI version and package metadata.
 
 Do not publish a version merely because a workflow passed. The release owner must review the exact source commit and artifacts.
