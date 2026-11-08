@@ -24,7 +24,9 @@ A pattern-based review was performed against the GitHub-provided patches for all
 - One credential-URL pattern match was an intentional localhost test fixture that verifies rejection of embedded URL credentials. It is test data, not a usable credential.
 - No matches were identified in the PR #15 patch.
 
-**Limitations:** This manual pattern review is not equivalent to Gitleaks, does not prove that no secret exists, and does not replace a full Git object/ref scan. The automated full-history Gitleaks workflow has been added but its successful execution and findings have not yet been verified. A human review of any scanner findings is still required.
+**Automated result:** The Gitleaks full-history/all-ref workflow completed successfully on commit `b5aaa58a29179bfcc04b6aa3768c450ae2df3466` (GitHub Actions run [42470508661](https://github.com/ArnabIITP/TwinCheck/actions/runs/42470508661)). The checkout fetched both current branches (`main` and `work`) and all tags. Gitleaks v8.30.1 reported **46 commits scanned, approximately 742,220 bytes scanned, and no leaks found**.
+
+**Limitations:** This is a strong automated scan of the refs available at that commit, but it does not prove that no secret exists. It cannot inspect GitHub-hosted secrets/settings or private data in connected services. Continue secret scanning on future pushes and review any new findings.
 
 ## Controls added on the working branch
 
@@ -38,9 +40,9 @@ These changes are proposed in PR #18 and are not yet merged into `main`.
 
 ## Remaining publication blockers
 
-- [ ] Execute the full-history/all-ref Gitleaks workflow and review every finding.
-- [ ] Investigate any real credential exposure and rotate/revoke affected credentials. Removing a value from a later commit is not sufficient.
-- [ ] Confirm GitHub Actions runs successfully for the security workflow.
+- [x] Execute the full-history/all-ref Gitleaks workflow and review its findings: 46 commits scanned, no leaks found.
+- [x] Triage the one manual credential-URL pattern match: it is an intentional localhost test fixture, not a real credential.
+- [ ] Confirm the CI matrix and the remaining security workflow changes pass on the final PR head.
 - [ ] Review the complete current repository tree, including examples, fixtures, reports, documentation, and release artifacts.
 - [ ] Review all refs and tags, including branches not represented by the default-branch commit list.
 - [ ] Confirm private vulnerability reporting is enabled or provide a reliable private reporting route.
@@ -49,4 +51,4 @@ These changes are proposed in PR #18 and are not yet merged into `main`.
 
 ## Decision
 
-**Do not make the repository public yet.** The manual triage did not identify a likely real secret in the reviewed patches, but the authoritative automated all-ref scan has not been executed and reviewed. The public launch gate remains closed until the blockers above are resolved.
+**Do not make the repository public yet.** The automated Gitleaks scan completed successfully with no leaks found. The public launch gate remains closed until the final CI/security workflow results, repository and release-artifact review, private vulnerability reporting configuration, and remaining checklist items are resolved.
