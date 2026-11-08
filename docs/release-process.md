@@ -2,7 +2,7 @@
 
 ## Current status
 
-TwinCheck is alpha software at version `0.12.0a1`. The project has a release-candidate validation workflow and a GitHub Actions workflow for PyPI Trusted Publishing. The publishing workflow remains dependent on one-time PyPI Trusted Publisher and GitHub environment configuration. **No PyPI release has been published yet.** Do not tell users to install TwinCheck from PyPI until the first package is actually available.
+TwinCheck is public alpha software at version `0.12.0a1`. The first PyPI release has not yet been published. The release-candidate workflow has built and verified wheel and source distributions from the current mainline commit. The GitHub Actions workflows are configured for PyPI Trusted Publishing; the maintainer reports that the PyPI pending publisher and GitHub `pypi` environment have been created, but their account-side settings still need confirmation before publication. Do not tell users to install TwinCheck from PyPI until the first package is actually available.
 
 ## Supported compatibility surfaces
 
@@ -39,12 +39,12 @@ The verifier checks that exactly one wheel and one source archive exist, runs `t
 
 Before the first public package release:
 
-1. Create the `twincheck` project on PyPI through its first-publication procedure, or reserve the name if PyPI supports the desired workflow for a new project.
-2. Configure a PyPI Trusted Publisher for owner `ArnabIITP`, repository `TwinCheck`, workflow `.github/workflows/publish.yml`, and GitHub environment `pypi`. Use the exact values shown by PyPI's Trusted Publishing setup.
-3. Create the GitHub environment named `pypi`. Configure required reviewers and prevent self-review where the repository's plan/settings allow it. The workflow pauses at this environment before obtaining the OIDC publishing permission.
-4. Confirm the workflow has only `contents: read` and `id-token: write` permissions for the publishing job.
-5. Confirm the package name, owner metadata, license, README rendering, source archive contents and version before tagging.
-6. Keep the repository private until the separate publication-safety audit is cleared.
+1. Immediately before publishing, confirm that the normalized PyPI project name `twincheck` is still available. A pending publisher does not reserve the project name; the first successful upload creates the project.
+2. Confirm the PyPI pending publisher values are owner `ArnabIITP`, repository `TwinCheck`, workflow filename `publish.yml`, and GitHub environment `pypi`. The workflow path in this repository is `.github/workflows/publish.yml`; PyPI's workflow field expects the filename.
+3. Confirm the GitHub environment is named `pypi`, its deployment branch/tag rule permits the release tag, and any configured reviewer can approve the deployment. No environment secrets or variables are required.
+4. Confirm the publishing job has only `contents: read` and `id-token: write` permissions. It must use OIDC, not a long-lived PyPI API token.
+5. Confirm the package name, version, owner metadata, MIT license, README rendering, source archive contents and release notes before tagging.
+6. Keep the GitHub Release in draft until the exact artifacts and release notes have been reviewed. The repository is already public; do not confuse repository visibility with permission to publish a package.
 
 Trusted Publishing must be configured before the first release workflow is expected to publish successfully. Do not add a PyPI API token to repository secrets as a workaround.
 

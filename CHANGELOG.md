@@ -2,15 +2,17 @@
 
 ## Unreleased
 
+No user-facing changes are currently unreleased.
+
+## 0.12.0a1 - Pinned exploration protocol corpus v1 and public alpha release
+
 - Rewrite the README for public alpha users and add a standalone installation and quick-start guide.
 - Add a publication-safety audit record and automated Gitleaks, CodeQL, OpenSSF Scorecard and Dependabot configuration.
 - Add a draft GitHub Release workflow that builds and verifies artifacts from version tags.
 - Add a PyPI Trusted Publishing workflow gated by the GitHub `pypi` environment and a published GitHub Release.
 - Require the quick-start guide to be included in verified source distributions.
 - Clarify the alpha release and compatibility policy.
-
-
-## 0.12.0a1 - Pinned exploration protocol corpus v1 (alpha)
+- Pin GitHub Actions dependencies to immutable commit SHAs for supply-chain integrity.
 
 - Add a separate, versioned synthetic exploration corpus with clean-control, response-value drift, stateful read-ordering, and paired-field interaction cases.
 - Pin fixture, schema and protocol-runner SHA-256 digests and validate the corpus manifest and workflow/contract schemas before executing targets.
