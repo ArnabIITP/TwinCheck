@@ -41,9 +41,10 @@ cd TwinCheck
 python -m pip install -e .
 ```
 
-Run the included command-line example:
+Create a directory for the report files, then run the included command-line example:
 
 ```bash
+mkdir -p reports
 twincheck compare \
   --reference "python examples/reference.py" \
   --candidate "python examples/candidate.py" \
