@@ -2,7 +2,7 @@
 
 ## Current status
 
-TwinCheck is alpha software at version `0.12.0a1`. The project has a release-candidate validation workflow and a documented PyPI publishing workflow is being prepared. **No PyPI release has been published yet.** Do not tell users to install TwinCheck from PyPI until the first package is actually available.
+TwinCheck is alpha software at version `0.12.0a1`. The project has a release-candidate validation workflow and a GitHub Actions workflow for PyPI Trusted Publishing. The publishing workflow remains dependent on one-time PyPI Trusted Publisher and GitHub environment configuration. **No PyPI release has been published yet.** Do not tell users to install TwinCheck from PyPI until the first package is actually available.
 
 ## Supported compatibility surfaces
 
