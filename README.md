@@ -205,6 +205,7 @@ Reports, replay artifacts and workflow definitions can contain failing inputs an
 - [Roadmap and known limitations](docs/roadmap.md)
 - [Security policy](SECURITY.md)
 - [Contributing guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Changelog](CHANGELOG.md)
 
 ## Development
