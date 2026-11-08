@@ -68,6 +68,7 @@ def main() -> int:
         "SECURITY.md",
         "LICENSE",
         "docs/release-process.md",
+        "docs/quickstart.md",
         "docs/python-api.md",
         "docs/report-schema-v1.schema.json",
         "docs/stateful-http-sequence-v1.schema.json",
