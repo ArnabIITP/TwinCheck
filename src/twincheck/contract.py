@@ -116,10 +116,14 @@ def contract_from_dict(data: Any) -> CompatibilityContract:
 def load_contract(path: str | Path) -> CompatibilityContract:
     """Load a bounded, local JSON contract file."""
     contract_path = Path(path)
-    if contract_path.stat().st_size > _MAX_CONTRACT_BYTES:
+    # Bound the read itself, not just the initial stat: a file can grow between
+    # stat() and read_text(), and an oversized file should never be loaded whole.
+    with contract_path.open("rb") as source:
+        raw = source.read(_MAX_CONTRACT_BYTES + 1)
+    if len(raw) > _MAX_CONTRACT_BYTES:
         raise ValueError("compatibility contract exceeds 1 MiB")
     try:
-        content = contract_path.read_text(encoding="utf-8")
+        content = raw.decode("utf-8")
         decoded = json.loads(content)
     except UnicodeDecodeError as exc:
         raise ValueError("compatibility contract must be UTF-8 JSON") from exc
