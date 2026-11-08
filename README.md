@@ -13,7 +13,7 @@ Give TwinCheck a reference implementation and a candidate replacement. It runs b
 
 </div>
 
-> **Alpha software.** TwinCheck is actively developed and its CLI and file formats may evolve before 1.0. It is a testing tool, not a proof of program equivalence, a production monitoring system, or a security sandbox. The first PyPI alpha release is being prepared. Until it is published, use the source installation instructions below. After publication, install the pinned alpha with `python -m pip install twincheck==0.12.0a1`.
+> **Alpha software.** TwinCheck is actively developed and its CLI and file formats may evolve before 1.0. It is a testing tool, not a proof of program equivalence, a production monitoring system, or a security sandbox. TwinCheck 0.12.0a1 is published on [PyPI](https://pypi.org/project/twincheck/0.12.0a1/). Install this pre-release explicitly with `python -m pip install --pre twincheck==0.12.0a1`. The source-installation instructions below are for contributors working from the repository.
 
 ## Why TwinCheck?
 
@@ -33,7 +33,19 @@ Typical use cases include:
 
 **Requirements:** Python 3.11 or newer.
 
-Clone the repository and install the project in editable mode:
+Install the published alpha from PyPI:
+
+```bash
+python -m pip install --pre twincheck==0.12.0a1
+```
+
+Check the installed command:
+
+```bash
+twincheck --help
+```
+
+To work from the latest source instead, clone the repository and install it in editable mode:
 
 ```bash
 git clone https://github.com/ArnabIITP/TwinCheck.git
