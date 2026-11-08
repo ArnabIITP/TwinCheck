@@ -2,7 +2,7 @@
 
 ## Current status
 
-TwinCheck is public alpha software at version `0.12.0a1`. The first PyPI release has not yet been published. The release-candidate workflow has built and verified wheel and source distributions from the current mainline commit. The GitHub Actions workflows are configured for PyPI Trusted Publishing; the maintainer reports that the PyPI pending publisher and GitHub `pypi` environment have been created, but their account-side settings still need confirmation before publication. Do not tell users to install TwinCheck from PyPI until the first package is actually available.
+TwinCheck is public alpha software. Version `0.12.0a1` has been published to [PyPI](https://pypi.org/project/twincheck/0.12.0a1/) and as a [GitHub pre-release](https://github.com/ArnabIITP/TwinCheck/releases/tag/v0.12.0a1). The `Publish to PyPI` workflow completed successfully using GitHub Actions OIDC Trusted Publishing. It built and verified the wheel and source distribution, uploaded both to PyPI, and generated digital attestations. Install the pinned alpha with `python -m pip install --pre twincheck==0.12.0a1`. The package is still pre-1.0 alpha software; pin versions in automation and review the changelog before upgrading.
 
 ## Supported compatibility surfaces
 
@@ -35,9 +35,9 @@ The verifier checks that exactly one wheel and one source archive exist, runs `t
 - **Prepare GitHub release** runs when a `v*` tag is pushed. It checks that the tag matches the package version, builds and verifies the wheel and source archive, and creates a draft GitHub Release with generated notes and both artifacts attached. A maintainer reviews and publishes the draft manually.
 - **PyPI publishing** is triggered only when a GitHub Release is published. It rebuilds and verifies the package from the release tag, checks that the tag matches the version in `pyproject.toml`, and uses PyPI Trusted Publishing through GitHub Actions OIDC. It does not use a long-lived PyPI API token.
 
-## One-time PyPI and GitHub configuration
+## PyPI and GitHub publishing configuration
 
-Before the first public package release:
+The following configuration was required for the initial publication and should be retained for future releases:
 
 1. Immediately before publishing, confirm that the normalized PyPI project name `twincheck` is still available. A pending publisher does not reserve the project name; the first successful upload creates the project.
 2. Confirm the PyPI pending publisher values are owner `ArnabIITP`, repository `TwinCheck`, workflow filename `publish.yml`, and GitHub environment `pypi`. The workflow path in this repository is `.github/workflows/publish.yml`; PyPI's workflow field expects the filename.
@@ -50,7 +50,7 @@ Trusted Publishing must be configured before the first release workflow is expec
 
 ## Release checklist
 
-For each alpha release:
+For each subsequent alpha release:
 
 1. Choose the next version and update both `pyproject.toml` and `src/twincheck/__init__.py` to the same value.
 2. Update `CHANGELOG.md` with user-visible changes, migration notes and known limitations.
