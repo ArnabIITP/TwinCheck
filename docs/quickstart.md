@@ -2,9 +2,28 @@
 
 This guide gets TwinCheck running from a source checkout and walks through command-line and local HTTP comparisons.
 
-> TwinCheck is currently alpha software. A PyPI release has not been published yet, so install from the repository. Python 3.11 or newer is required.
+> TwinCheck is alpha software. Version `0.12.0a1` is published on [PyPI](https://pypi.org/project/twincheck/0.12.0a1/). Python 3.11 or newer is required.
 
-## 1. Install from source
+## 1. Install the published alpha
+
+Install the pinned pre-release:
+
+```bash
+python -m pip install --pre twincheck==0.12.0a1
+```
+
+Check that the command is available:
+
+```bash
+twincheck --help
+```
+
+If your environment does not expose installed scripts on PATH, check the Scripts directory for your Python installation or repair the PATH entry. The package provides the `twincheck` console command.
+
+## 2. Install from source
+
+The remaining walkthrough uses the repository's included examples, so clone the repository as well:
+
 
 ```bash
 git clone https://github.com/ArnabIITP/TwinCheck.git
@@ -26,7 +45,7 @@ python -m twincheck --help
 
 The core package has no runtime third-party dependencies. The optional `test` extra installs the JSON Schema validation dependency used by tests and benchmark tooling.
 
-## 2. Compare two command-line implementations
+## 3. Compare two command-line implementations
 
 The repository includes a reference program and a deliberately different candidate.
 
@@ -77,7 +96,7 @@ See all flags with:
 twincheck compare --help
 ```
 
-## 3. Compare two local HTTP implementations
+## 4. Compare two local HTTP implementations
 
 Start two instances of the included quote service in separate terminals:
 
@@ -107,7 +126,7 @@ The candidate adds a delta to the calculated total, so the comparison should fin
 
 HTTP mode is restricted to loopback addresses (`localhost`, `127.0.0.1`, and `::1`). It is intended for local test services, not remote API scanning. TwinCheck does not start or sandbox the services.
 
-## 4. Compare a stateful HTTP workflow
+## 5. Compare a stateful HTTP workflow
 
 A single request may not expose a regression that appears only after a sequence of operations. The included cart example creates a cart, adds an item, and reads the resulting state.
 
@@ -134,7 +153,7 @@ The workflow captures a value from the create response and uses it in later requ
 
 Stateful workflows can mutate service state. Use disposable local services and synthetic data. For exploration and replay, read the CLI help and the [stateful sequence format](stateful-http-sequence-v1.schema.json).
 
-## 5. Run tests and validate a package build
+## 6. Run tests and validate a package build
 
 Install the optional test dependency:
 
@@ -158,7 +177,7 @@ python scripts/verify_distribution.py --dist-dir dist
 
 The distribution verifier checks package metadata and archive contents, installs the wheel into a clean environment outside the checkout, and exercises the installed CLI.
 
-## 6. Interpret results carefully
+## 7. Interpret results carefully
 
 - A reported mismatch is evidence of a difference under the executed inputs and configured comparison contract.
 - A clean run means no difference was observed in the cases executed. It does not prove equivalence.
